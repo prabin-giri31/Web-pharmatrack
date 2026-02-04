@@ -1,6 +1,15 @@
 import React from "react";
 import { FiSearch, FiFilter, FiChevronDown, FiX, FiCalendar } from "react-icons/fi";
 
+// Default payment filters for fallback
+const DEFAULT_PAYMENT_FILTERS = [
+  { key: "all", label: "All Payments" },
+  { key: "unpaid", label: "Unpaid" },
+  { key: "partially_paid", label: "Partially Paid" },
+  { key: "paid", label: "Paid" },
+  { key: "overdue", label: "Overdue" },
+];
+
 const SalesOrderFilters = ({
   searchQuery,
   onSearchChange,
@@ -13,14 +22,13 @@ const SalesOrderFilters = ({
   customers,
   showFilters,
   onToggleFilters,
+  paymentFilters = DEFAULT_PAYMENT_FILTERS,
 }) => {
-  const paymentFilters = [
-    { id: "all", label: "All Payments" },
-    { id: "unpaid", label: "Unpaid" },
-    { id: "partially_paid", label: "Partially Paid" },
-    { id: "paid", label: "Paid" },
-    { id: "overdue", label: "Overdue" },
-  ];
+  // Normalize filter format to support both { id, label } and { key, label }
+  const normalizedFilters = paymentFilters.map(f => ({
+    id: f.id || f.key,
+    label: f.label,
+  }));
 
   const clearFilters = () => {
     onPaymentFilterChange("all");
@@ -96,7 +104,7 @@ const SalesOrderFilters = ({
                   onChange={(e) => onPaymentFilterChange(e.target.value)}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
-                  {paymentFilters.map((filter) => (
+                  {normalizedFilters.map((filter) => (
                     <option key={filter.id} value={filter.id}>
                       {filter.label}
                     </option>
@@ -160,7 +168,7 @@ const SalesOrderFilters = ({
 
         {/* Payment Status Quick Filters */}
         <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-1">
-          {paymentFilters.map((filter) => (
+          {normalizedFilters.map((filter) => (
             <button
               key={filter.id}
               onClick={() => onPaymentFilterChange(filter.id)}

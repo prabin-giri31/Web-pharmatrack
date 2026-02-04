@@ -13,15 +13,45 @@ export const clearAuthData = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("rememberedEmail");
   localStorage.removeItem("rememberedPassword");
+  localStorage.removeItem("globalSearch");
+  localStorage.removeItem("globalSearchDraft");
 };
 
 // Get stored token
 export const getToken = () => localStorage.getItem("token");
 
+// Set token
+export const setToken = (token) => localStorage.setItem("token", token);
+
 // Get stored user
 export const getUser = () => {
-  const user = localStorage.getItem("user");
-  return user ? JSON.parse(user) : null;
+  try {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
+  } catch {
+    return null;
+  }
+};
+
+// Set user
+export const setUser = (user) => {
+  localStorage.setItem("user", JSON.stringify(user));
+};
+
+// Check if user has a specific role
+export const hasRole = (requiredRole) => {
+  const user = getUser();
+  if (!user) return false;
+  const userRole = (user.role || user.userType || "").toLowerCase();
+  return userRole === requiredRole.toLowerCase();
+};
+
+// Check if user is admin
+export const isAdmin = () => {
+  const user = getUser();
+  if (!user) return false;
+  const role = (user.role || user.userType || "").toLowerCase();
+  return role !== "staff";
 };
 
 // Verify token with backend

@@ -180,7 +180,7 @@ const AddNewItem = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">
-                Selling Price (NPR) <span className="text-red-500">*</span>
+                Selling Price (Rs.) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -194,7 +194,7 @@ const AddNewItem = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                Cost Price (NPR) <span className="text-red-500">*</span>
+                Cost Price (Rs.) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"

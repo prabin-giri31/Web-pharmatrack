@@ -25,8 +25,9 @@ export const API_ENDPOINTS = {
   inventory: `${API_BASE_URL}/api/inventory`,
   customers: `${API_BASE_URL}/api/customers`,
   salesOrders: `${API_BASE_URL}/api/sales-orders`,
+  invoices: `${API_BASE_URL}/api/invoices`,
   users: `${API_BASE_URL}/api/auth/users`,
-  notifications: `${API_BASE_URL}/notifications`,
+  notifications: `${API_BASE_URL}/api/notifications`,
   search: `${API_BASE_URL}/api/search`,
   dashboard: `${API_BASE_URL}/api/dashboard`,
   suppliers: `${API_BASE_URL}/api/suppliers`,
@@ -35,6 +36,10 @@ export const API_ENDPOINTS = {
   medicineTypes: `${API_BASE_URL}/api/medicine-types`,
   diseaseCategories: `${API_BASE_URL}/api/disease-categories`,
   itemsGroups: `${API_BASE_URL}/api/items-groups`,
+  purchaseReceives: `${API_BASE_URL}/api/purchase-receives`,
+  bills: `${API_BASE_URL}/api/bills`,
+  payments: `${API_BASE_URL}/api/payments`,
+  vendorCredits: `${API_BASE_URL}/api/vendor-credits`,
 };
 
 // Helper function for API calls with better error handling

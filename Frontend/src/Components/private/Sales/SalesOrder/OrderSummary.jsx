@@ -16,10 +16,7 @@ const OrderSummary = ({
   onAdjustmentChange,
 }) => {
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "NPR",
-    }).format(amount);
+    return `Rs. ${parseFloat(amount || 0).toLocaleString('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   return (
@@ -48,7 +45,7 @@ const OrderSummary = ({
                   className="px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
                   <option value="percent">%</option>
-                  <option value="amount">NPR</option>
+                  <option value="amount">Rs.</option>
                 </select>
                 <input
                   type="number"
@@ -76,7 +73,7 @@ const OrderSummary = ({
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Shipping Charges</span>
           <div className="relative w-28">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">NPR</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Rs.</span>
             <input
               type="number"
               value={shippingCharges}
@@ -92,7 +89,7 @@ const OrderSummary = ({
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Adjustment</span>
           <div className="relative w-28">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">NPR</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Rs.</span>
             <input
               type="number"
               value={adjustment}

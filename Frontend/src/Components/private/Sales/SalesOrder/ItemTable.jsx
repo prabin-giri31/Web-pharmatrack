@@ -154,10 +154,7 @@ const ItemTable = ({ items, onItemsChange, products: productsProp }) => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+    return `Rs. ${parseFloat(amount || 0).toLocaleString('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   return (
@@ -303,7 +300,7 @@ const ItemTable = ({ items, onItemsChange, products: productsProp }) => {
                   className="px-2 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="percent">%</option>
-                  <option value="amount">NPR</option>
+                  <option value="amount">Rs.</option>
                 </select>
                 <input
                   type="number"

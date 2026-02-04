@@ -66,8 +66,8 @@ const DashboardPage = () => {
               />
               <StatCard
                 icon={<FiTrendingUp className="w-6 h-6 text-green-600" />}
-                label="Today's Sales (NPR)"
-                value={Number(summary.todaysSales || 0).toFixed(2)}
+                label="Today's Sales"
+                value={`Rs. ${Number(summary.todaysSales || 0).toFixed(2)}`}
               />
               <StatCard
                 icon={<FiFileText className="w-6 h-6 text-purple-600" />}
@@ -87,7 +87,7 @@ const DashboardPage = () => {
                       <p className="font-medium text-gray-900">{order.orderNumber}</p>
                       <p className="text-sm text-gray-500">{order.status}</p>
                     </div>
-                    <div className="text-sm text-gray-700">NPR {Number(order.grandTotal || 0).toFixed(2)}</div>
+                    <div className="text-sm text-gray-700">Rs. {Number(order.grandTotal || 0).toFixed(2)}</div>
                   </div>
                 ))}
                 {summary.recentOrders?.length === 0 && (

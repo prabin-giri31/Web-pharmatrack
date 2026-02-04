@@ -3,6 +3,10 @@ import { sequelize } from "../../Database/db.js";
 import bcrypt from "bcryptjs";
 
 export const User = sequelize.define("User", {
+  username: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   pharmacyName: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -28,6 +32,24 @@ export const User = sequelize.define("User", {
   address: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "staff",
+  },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "active",
+  },
+  profilePhoto: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  lastLoginAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
   },
   password: {
     type: DataTypes.STRING,

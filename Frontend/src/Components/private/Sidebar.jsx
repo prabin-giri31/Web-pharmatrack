@@ -78,7 +78,7 @@ const Sidebar = ({ onClose }) => {
           <SubMenu>
             <SubItem label="Customers" onClick={() => handleNavigate("/sales/customers")} />
             <SubItem label="Sales Orders" onClick={() => handleNavigate("/sales/orders")} />
-            <SubItem label="Invoices" />
+            <SubItem label="Invoices" onClick={() => handleNavigate("/sales/invoices")} />
           </SubMenu>
         )}
 
@@ -91,12 +91,12 @@ const Sidebar = ({ onClose }) => {
         />
         {openMenu === "purchase" && (
           <SubMenu>
-            <SubItem label="Vendors" />
+            <SubItem label="Vendors" onClick={() => handleNavigate("/purchases/suppliers")} />
             <SubItem label="Purchase Orders" />
-            <SubItem label="Purchase Receives" />
-            <SubItem label="Bills" />
-            <SubItem label="Payments Made" />
-            <SubItem label="Vendor Credits" />
+            <SubItem label="Purchase Receives" onClick={() => handleNavigate("/purchases/receives")} />
+            <SubItem label="Bills" onClick={() => handleNavigate("/purchases/bills")} />
+            <SubItem label="Payments Made" onClick={() => handleNavigate("/purchases/payments")} />
+            <SubItem label="Vendor Credits" onClick={() => handleNavigate("/purchases/vendor-credits")} />
           </SubMenu>
         )}
       </nav>

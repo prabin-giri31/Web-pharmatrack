@@ -23,6 +23,7 @@ const SalesOrderList = ({
   onConfirm,
   onDuplicate,
   onConvertToInvoice,
+  onMarkDelivered,
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
 
@@ -68,10 +69,7 @@ const SalesOrderList = ({
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+    return `Rs. ${parseFloat(amount || 0).toLocaleString('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const formatStatus = (status) => {
@@ -184,6 +182,7 @@ const SalesOrderList = ({
                         onConfirm={onConfirm}
                         onDuplicate={onDuplicate}
                         onConvertToInvoice={onConvertToInvoice}
+                        onMarkDelivered={onMarkDelivered}
                         onClose={() => setOpenMenuId(null)}
                       />
                     )}
@@ -267,6 +266,7 @@ const ActionMenu = ({
   onConfirm,
   onDuplicate,
   onConvertToInvoice,
+  onMarkDelivered,
   onClose,
 }) => {
   const handleAction = (action) => {
@@ -301,6 +301,16 @@ const ActionMenu = ({
             Confirm Order
           </button>
         </>
+      )}
+
+      {order.status === "confirmed" && onMarkDelivered && (
+        <button
+          onClick={() => handleAction(onMarkDelivered)}
+          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-cyan-600 hover:bg-cyan-50"
+        >
+          <FiTruck className="w-4 h-4" />
+          Mark as Delivered
+        </button>
       )}
 
       {order.status === "delivered" && (

@@ -27,6 +27,7 @@ const SalesOrderDetailsModal = ({
   onCancel,
   onConvertToInvoice,
   onDuplicate,
+  onMarkDelivered,
 }) => {
   const modalRef = useRef(null);
 
@@ -62,10 +63,7 @@ const SalesOrderDetailsModal = ({
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+    return `Rs. ${parseFloat(amount || 0).toLocaleString('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const formatStatus = (status) => {
@@ -167,6 +165,15 @@ const SalesOrderDetailsModal = ({
                     Confirm
                   </button>
                 </>
+              )}
+              {order.status === "confirmed" && onMarkDelivered && (
+                <button
+                  onClick={() => { onMarkDelivered(order); onClose(); }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-cyan-600 rounded-lg hover:bg-cyan-700"
+                >
+                  <FiTruck className="w-4 h-4" />
+                  Mark Delivered
+                </button>
               )}
               {order.status === "delivered" && (
                 <button
@@ -275,22 +282,31 @@ const SalesOrderDetailsModal = ({
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {order.items.map((item, index) => {
-                    const subtotal = item.quantity * item.unitPrice;
-                    const discountAmount = (subtotal * item.discount) / 100;
+                    const unitPrice = parseFloat(item.unitPrice) || 0;
+                    const quantity = item.quantity || 0;
+                    const discount = parseFloat(item.discount) || 0;
+                    const tax = parseFloat(item.tax) || 0;
+                    
+                    const subtotal = quantity * unitPrice;
+                    const discountAmount = (subtotal * discount) / 100;
                     const afterDiscount = subtotal - discountAmount;
-                    const taxAmount = (afterDiscount * item.tax) / 100;
-                    const total = afterDiscount + taxAmount;
+                    const taxAmount = (afterDiscount * tax) / 100;
+                    const total = item.lineTotal ? parseFloat(item.lineTotal) : afterDiscount + taxAmount;
+                    
+                    // Handle both product object and flat item properties from backend
+                    const productName = item.product?.name || item.productName || "Unknown Product";
+                    const productSku = item.product?.sku || item.productSku || "-";
 
                     return (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">{item.product.name}</p>
-                          <p className="text-sm text-gray-500">SKU: {item.product.sku}</p>
+                          <p className="font-medium text-gray-900">{productName}</p>
+                          <p className="text-sm text-gray-500">SKU: {productSku}</p>
                         </td>
-                        <td className="px-4 py-3 text-center">{item.quantity}</td>
-                        <td className="px-4 py-3 text-right">{formatCurrency(item.unitPrice)}</td>
-                        <td className="px-4 py-3 text-center">{item.discount}%</td>
-                        <td className="px-4 py-3 text-center">{item.tax}%</td>
+                        <td className="px-4 py-3 text-center">{quantity}</td>
+                        <td className="px-4 py-3 text-right">{formatCurrency(unitPrice)}</td>
+                        <td className="px-4 py-3 text-center">{discount}%</td>
+                        <td className="px-4 py-3 text-center">{tax}%</td>
                         <td className="px-4 py-3 text-right font-semibold">{formatCurrency(total)}</td>
                       </tr>
                     );

@@ -4,8 +4,13 @@ import InventoryAdjustment from "./Inventory/InventoryAdjustment.js";
 import { ItemsGroup, MedicineType, DiseaseCategory } from "./ItemsGroup/index.js";
 import Customer from "./Customer/Customer.js";
 import { SalesOrder, SalesOrderItem } from "./SalesOrder/index.js";
+import { Invoice, InvoiceItem } from "./Invoice/index.js";
 import Notification from "./Notification/Notification.js";
 import Supplier from "./Supplier/Supplier.js";
+import { PurchaseReceive, PurchaseReceiveItem } from "./PurchaseReceive/index.js";
+import { Bill, BillItem } from "./Bill/index.js";
+import { Payment, PaymentItem } from "./Payment/index.js";
+import { VendorCredit, VendorCreditItem } from "./VendorCredit/index.js";
 
 // Define relationships
 // SalesOrder belongs to Customer
@@ -41,6 +46,57 @@ User.hasMany(Customer, {
     as: "customers",
 });
 
+// Invoice relationships
+Invoice.belongsTo(Customer, {
+    foreignKey: "customerId",
+    as: "customer",
+});
+
+Customer.hasMany(Invoice, {
+    foreignKey: "customerId",
+    as: "invoices",
+});
+
+Invoice.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+});
+
+User.hasMany(Invoice, {
+    foreignKey: "userId",
+    as: "invoices",
+});
+
+Invoice.belongsTo(SalesOrder, {
+    foreignKey: "salesOrderId",
+    as: "salesOrder",
+});
+
+SalesOrder.hasOne(Invoice, {
+    foreignKey: "salesOrderId",
+    as: "invoice",
+});
+
+Invoice.hasMany(InvoiceItem, {
+    foreignKey: "invoiceId",
+    as: "items",
+});
+
+InvoiceItem.belongsTo(Invoice, {
+    foreignKey: "invoiceId",
+    as: "invoice",
+});
+
+InvoiceItem.belongsTo(Item, {
+    foreignKey: "productId",
+    as: "product",
+});
+
+Item.hasMany(InvoiceItem, {
+    foreignKey: "productId",
+    as: "invoiceItems",
+});
+
 Notification.belongsTo(User, {
     foreignKey: "userId",
     as: "user",
@@ -61,4 +117,138 @@ User.hasMany(Supplier, {
     as: "suppliers",
 });
 
-export { User, Item, InventoryAdjustment, ItemsGroup, MedicineType, DiseaseCategory, Customer, SalesOrder, SalesOrderItem, Notification, Supplier };
+// PurchaseReceive relationships
+PurchaseReceive.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier",
+});
+
+Supplier.hasMany(PurchaseReceive, {
+    foreignKey: "supplierId",
+    as: "purchaseReceives",
+});
+
+PurchaseReceive.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+});
+
+User.hasMany(PurchaseReceive, {
+    foreignKey: "userId",
+    as: "purchaseReceives",
+});
+
+PurchaseReceiveItem.belongsTo(Item, {
+    foreignKey: "itemId",
+    as: "item",
+});
+
+Item.hasMany(PurchaseReceiveItem, {
+    foreignKey: "itemId",
+    as: "purchaseReceiveItems",
+});
+
+// Bill relationships
+Bill.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier",
+});
+
+Supplier.hasMany(Bill, {
+    foreignKey: "supplierId",
+    as: "bills",
+});
+
+Bill.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+});
+
+User.hasMany(Bill, {
+    foreignKey: "userId",
+    as: "bills",
+});
+
+BillItem.belongsTo(Item, {
+    foreignKey: "itemId",
+    as: "item",
+});
+
+Item.hasMany(BillItem, {
+    foreignKey: "itemId",
+    as: "billItems",
+});
+
+// Payment relationships
+Payment.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier",
+});
+
+Supplier.hasMany(Payment, {
+    foreignKey: "supplierId",
+    as: "payments",
+});
+
+Payment.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+});
+
+User.hasMany(Payment, {
+    foreignKey: "userId",
+    as: "payments",
+});
+
+PaymentItem.belongsTo(Bill, {
+    foreignKey: "billId",
+    as: "bill",
+});
+
+Bill.hasMany(PaymentItem, {
+    foreignKey: "billId",
+    as: "paymentItems",
+});
+
+// VendorCredit relationships
+VendorCredit.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier",
+});
+
+Supplier.hasMany(VendorCredit, {
+    foreignKey: "supplierId",
+    as: "vendorCredits",
+});
+
+VendorCredit.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+});
+
+User.hasMany(VendorCredit, {
+    foreignKey: "userId",
+    as: "vendorCredits",
+});
+
+VendorCredit.belongsTo(Bill, {
+    foreignKey: "billId",
+    as: "bill",
+});
+
+Bill.hasMany(VendorCredit, {
+    foreignKey: "billId",
+    as: "vendorCredits",
+});
+
+VendorCreditItem.belongsTo(Item, {
+    foreignKey: "itemId",
+    as: "item",
+});
+
+Item.hasMany(VendorCreditItem, {
+    foreignKey: "itemId",
+    as: "vendorCreditItems",
+});
+
+export { User, Item, InventoryAdjustment, ItemsGroup, MedicineType, DiseaseCategory, Customer, SalesOrder, SalesOrderItem, Invoice, InvoiceItem, Notification, Supplier, PurchaseReceive, PurchaseReceiveItem, Bill, BillItem, Payment, PaymentItem, VendorCredit, VendorCreditItem };

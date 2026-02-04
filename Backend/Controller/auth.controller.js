@@ -14,6 +14,7 @@ export const register = async (req, res) => {
       address,
       password,
     } = req.body;
+    const username = req.body.username || (email ? email.split("@")[0] : undefined);
 
     // Validation
     if (!pharmacyName || !ownerName || !email || !phone || !registrationNumber || !address || !password) {
@@ -32,6 +33,7 @@ export const register = async (req, res) => {
     }
     // Create user
     const user = new User({
+      username,
       pharmacyName,
       ownerName,
       email,
@@ -67,6 +69,8 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
+    await user.update({ lastLoginAt: new Date() });
+
     const token = jwt.sign(
       { userId: user.id, email: user.email },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
@@ -77,9 +81,15 @@ export const login = async (req, res) => {
       message: 'Login successful.',
       data: {
         id: user.id,
+        username: user.username,
         pharmacyName: user.pharmacyName,
         email: user.email,
-        ownerName: user.ownerName
+        ownerName: user.ownerName,
+        role: user.role,
+        status: user.status,
+        profilePhoto: user.profilePhoto,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
       },
       token
     });
@@ -126,7 +136,21 @@ export const listUsers = async (req, res) => {
 export const getProfile = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.userId, {
-      attributes: ["id", "pharmacyName", "ownerName", "email", "phone", "registrationNumber", "address"],
+      attributes: [
+        "id",
+        "username",
+        "pharmacyName",
+        "ownerName",
+        "email",
+        "phone",
+        "registrationNumber",
+        "address",
+        "role",
+        "status",
+        "profilePhoto",
+        "lastLoginAt",
+        "createdAt",
+      ],
     });
     if (!user) return res.status(404).json({ message: "User not found" });
     return res.status(200).json(user);
@@ -139,7 +163,7 @@ export const getProfile = async (req, res) => {
 // PATCH /api/auth/me
 export const updateProfile = async (req, res) => {
   try {
-    const { pharmacyName, ownerName, email, phone, registrationNumber, address } = req.body;
+    const { pharmacyName, ownerName, email, phone, registrationNumber, address, username, profilePhoto } = req.body;
     const user = await User.findByPk(req.user.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -157,16 +181,24 @@ export const updateProfile = async (req, res) => {
       phone: phone ?? user.phone,
       registrationNumber: registrationNumber ?? user.registrationNumber,
       address: address ?? user.address,
+      username: username ?? user.username,
+      profilePhoto: profilePhoto ?? user.profilePhoto,
     });
 
     return res.status(200).json({
       id: user.id,
+      username: user.username,
       pharmacyName: user.pharmacyName,
       ownerName: user.ownerName,
       email: user.email,
       phone: user.phone,
       registrationNumber: user.registrationNumber,
       address: user.address,
+      role: user.role,
+      status: user.status,
+      profilePhoto: user.profilePhoto,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
     });
   } catch (err) {
     console.error("Update Profile Error:", err);

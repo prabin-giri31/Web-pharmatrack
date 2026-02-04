@@ -1,14 +1,10 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiPlus,
-  FiSearch,
-  FiFilter,
   FiDownload,
   FiRefreshCw,
   FiFileText,
-  FiCalendar,
-  FiChevronDown,
   FiLoader,
 } from "react-icons/fi";
 import SalesOrderList from "../../Components/private/Sales/SalesOrderList";
@@ -16,200 +12,61 @@ import SalesOrderFilters from "../../Components/private/Sales/SalesOrderFilters"
 import CreateSalesOrderModal from "../../Components/private/Sales/CreateSalesOrderModal";
 import SalesOrderDetailsModal from "../../Components/private/Sales/SalesOrderDetailsModal";
 import { API_ENDPOINTS, apiRequest } from "../../config/api";
+import { statusCardColors } from "../../utils/statusStyles";
 
-// Dummy Products/Items Data
-export const dummyProducts = [
-  { id: 1, name: "Paracetamol 500mg", sku: "MED001", unit: "Box", unitPrice: 12.50, stock: 500, tax: 5 },
-  { id: 2, name: "Ibuprofen 400mg", sku: "MED002", unit: "Box", unitPrice: 15.00, stock: 350, tax: 5 },
-  { id: 3, name: "Amoxicillin 250mg", sku: "MED003", unit: "Strip", unitPrice: 8.75, stock: 200, tax: 5 },
-  { id: 4, name: "Vitamin C 1000mg", sku: "SUP001", unit: "Bottle", unitPrice: 22.00, stock: 150, tax: 8 },
-  { id: 5, name: "Omega-3 Fish Oil", sku: "SUP002", unit: "Bottle", unitPrice: 35.00, stock: 80, tax: 8 },
-  { id: 6, name: "Blood Pressure Monitor", sku: "EQP001", unit: "Piece", unitPrice: 89.99, stock: 25, tax: 12 },
-  { id: 7, name: "Digital Thermometer", sku: "EQP002", unit: "Piece", unitPrice: 15.99, stock: 100, tax: 12 },
-  { id: 8, name: "First Aid Kit", sku: "EQP003", unit: "Kit", unitPrice: 45.00, stock: 40, tax: 12 },
-  { id: 9, name: "Bandages (Pack of 50)", sku: "SUP003", unit: "Pack", unitPrice: 8.00, stock: 300, tax: 5 },
-  { id: 10, name: "Hand Sanitizer 500ml", sku: "HYG001", unit: "Bottle", unitPrice: 6.50, stock: 450, tax: 8 },
+// Status configuration - reusable for similar pages
+const ORDER_STATUS_CONFIG = [
+  { key: "all", label: "All", color: "blue" },
+  { key: "draft", label: "Draft", color: "gray" },
+  { key: "confirmed", label: "Confirmed", color: "indigo" },
+  { key: "delivered", label: "Delivered", color: "green" },
+  { key: "invoiced", label: "Invoiced", color: "purple" },
+  { key: "cancelled", label: "Cancelled", color: "red" },
 ];
 
-// Dummy Customers Data
-export const dummyCustomers = [
-  { id: 1, name: "John Smith", company: "Tech Solutions Inc.", email: "john@techsolutions.com", phone: "+1 555-0101" },
-  { id: 2, name: "Sarah Johnson", company: "HealthCare Plus", email: "sarah@healthcareplus.com", phone: "+1 555-0102" },
-  { id: 3, name: "Michael Brown", company: "Brown Enterprises", email: "michael@brownent.com", phone: "+1 555-0103" },
-  { id: 4, name: "Emily Davis", company: "MediSupply Co.", email: "emily@medisupply.com", phone: "+1 555-0104" },
-  { id: 5, name: "Robert Wilson", company: "Wilson Pharmacy", email: "robert@wilsonpharm.com", phone: "+1 555-0105" },
-];
-
-// Dummy Sales Orders Data
-const initialSalesOrders = [
-  {
-    id: 1,
-    orderNumber: "SO-2026-0001",
-    customerId: 1,
-    customer: dummyCustomers[0],
-    orderDate: "2026-01-10",
-    expectedDeliveryDate: "2026-01-15",
-    status: "confirmed",
-    paymentStatus: "unpaid",
-    paymentMethod: "bank",
-    dueDate: "2026-01-25",
-    advancePayment: 0,
-    items: [
-      { productId: 1, product: dummyProducts[0], quantity: 50, unitPrice: 12.50, discount: 5, tax: 5 },
-      { productId: 4, product: dummyProducts[3], quantity: 20, unitPrice: 22.00, discount: 0, tax: 8 },
-    ],
-    subtotal: 1065.00,
-    totalDiscount: 31.25,
-    totalTax: 66.55,
-    grandTotal: 1100.30,
-    notes: "Urgent delivery required",
-    createdAt: "2026-01-10T09:30:00",
-  },
-  {
-    id: 2,
-    orderNumber: "SO-2026-0002",
-    customerId: 2,
-    customer: dummyCustomers[1],
-    orderDate: "2026-01-09",
-    expectedDeliveryDate: "2026-01-14",
-    status: "delivered",
-    paymentStatus: "paid",
-    paymentMethod: "online",
-    dueDate: "2026-01-19",
-    advancePayment: 500,
-    items: [
-      { productId: 6, product: dummyProducts[5], quantity: 5, unitPrice: 89.99, discount: 10, tax: 12 },
-      { productId: 7, product: dummyProducts[6], quantity: 10, unitPrice: 15.99, discount: 0, tax: 12 },
-    ],
-    subtotal: 609.85,
-    totalDiscount: 45.00,
-    totalTax: 67.78,
-    grandTotal: 632.63,
-    notes: "",
-    createdAt: "2026-01-09T14:15:00",
-  },
-  {
-    id: 3,
-    orderNumber: "SO-2026-0003",
-    customerId: 3,
-    customer: dummyCustomers[2],
-    orderDate: "2026-01-08",
-    expectedDeliveryDate: "2026-01-12",
-    status: "invoiced",
-    paymentStatus: "partially_paid",
-    paymentMethod: "cash",
-    dueDate: "2026-01-18",
-    advancePayment: 200,
-    items: [
-      { productId: 2, product: dummyProducts[1], quantity: 30, unitPrice: 15.00, discount: 0, tax: 5 },
-      { productId: 3, product: dummyProducts[2], quantity: 40, unitPrice: 8.75, discount: 5, tax: 5 },
-    ],
-    subtotal: 800.00,
-    totalDiscount: 17.50,
-    totalTax: 39.13,
-    grandTotal: 821.63,
-    notes: "Monthly order",
-    createdAt: "2026-01-08T10:00:00",
-  },
-  {
-    id: 4,
-    orderNumber: "SO-2026-0004",
-    customerId: 4,
-    customer: dummyCustomers[3],
-    orderDate: "2026-01-07",
-    expectedDeliveryDate: "2026-01-10",
-    status: "draft",
-    paymentStatus: "unpaid",
-    paymentMethod: "",
-    dueDate: "",
-    advancePayment: 0,
-    items: [
-      { productId: 8, product: dummyProducts[7], quantity: 15, unitPrice: 45.00, discount: 10, tax: 12 },
-    ],
-    subtotal: 675.00,
-    totalDiscount: 67.50,
-    totalTax: 72.90,
-    grandTotal: 680.40,
-    notes: "Waiting for confirmation",
-    createdAt: "2026-01-07T16:45:00",
-  },
-  {
-    id: 5,
-    orderNumber: "SO-2026-0005",
-    customerId: 5,
-    customer: dummyCustomers[4],
-    orderDate: "2026-01-05",
-    expectedDeliveryDate: "2026-01-08",
-    status: "cancelled",
-    paymentStatus: "unpaid",
-    paymentMethod: "",
-    dueDate: "",
-    advancePayment: 0,
-    items: [
-      { productId: 10, product: dummyProducts[9], quantity: 100, unitPrice: 6.50, discount: 15, tax: 8 },
-    ],
-    subtotal: 650.00,
-    totalDiscount: 97.50,
-    totalTax: 44.20,
-    grandTotal: 596.70,
-    notes: "Customer cancelled",
-    createdAt: "2026-01-05T11:20:00",
-  },
-  {
-    id: 6,
-    orderNumber: "SO-2026-0006",
-    customerId: 1,
-    customer: dummyCustomers[0],
-    orderDate: "2026-01-04",
-    expectedDeliveryDate: "2026-01-09",
-    status: "delivered",
-    paymentStatus: "overdue",
-    paymentMethod: "bank",
-    dueDate: "2026-01-11",
-    advancePayment: 0,
-    items: [
-      { productId: 5, product: dummyProducts[4], quantity: 25, unitPrice: 35.00, discount: 5, tax: 8 },
-      { productId: 9, product: dummyProducts[8], quantity: 50, unitPrice: 8.00, discount: 0, tax: 5 },
-    ],
-    subtotal: 1275.00,
-    totalDiscount: 43.75,
-    totalTax: 86.50,
-    grandTotal: 1317.75,
-    notes: "Payment overdue",
-    createdAt: "2026-01-04T08:30:00",
-  },
+const PAYMENT_STATUS_CONFIG = [
+  { key: "all", label: "All Payments" },
+  { key: "unpaid", label: "Unpaid" },
+  { key: "partially_paid", label: "Partially Paid" },
+  { key: "paid", label: "Paid" },
+  { key: "overdue", label: "Overdue" },
 ];
 
 const SalesOrderPage = () => {
   const navigate = useNavigate();
+
   // State management
   const [salesOrders, setSalesOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Filters
   const [activeStatusFilter, setActiveStatusFilter] = useState("all");
   const [activePaymentFilter, setActivePaymentFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [selectedCustomer, setSelectedCustomer] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [viewingOrder, setViewingOrder] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  const fetchAllData = async () => {
-    setLoading(true);
+  // Fetch all data
+  const fetchAllData = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
-      // Fetch sales orders, customers, and products in parallel
       const [ordersResult, customersResult, productsResult] = await Promise.all([
         apiRequest(API_ENDPOINTS.salesOrders),
         apiRequest(API_ENDPOINTS.customers),
@@ -217,9 +74,20 @@ const SalesOrderPage = () => {
       ]);
 
       if (ordersResult.success) {
-        setSalesOrders(ordersResult.data || []);
+        // Normalize the data from backend
+        const normalizedOrders = (ordersResult.data || []).map((order) => ({
+          ...order,
+          customer: order.customer || {},
+          items: order.items || [],
+          subtotal: Number(order.subtotal) || 0,
+          totalDiscount: Number(order.totalDiscount) || 0,
+          totalTax: Number(order.totalTax) || 0,
+          grandTotal: Number(order.grandTotal) || 0,
+          advancePayment: Number(order.advancePayment) || 0,
+        }));
+        setSalesOrders(normalizedOrders);
       } else {
-        setError(ordersResult.error);
+        setError(ordersResult.error || "Failed to fetch orders");
       }
 
       if (customersResult.success) {
@@ -229,10 +97,10 @@ const SalesOrderPage = () => {
       if (productsResult.success) {
         const normalized = (productsResult.data || []).map((item) => ({
           id: item.id,
-          name: item.name,
+          name: item.name || item.itemName,
           sku: item.sku || "",
           unit: item.unit || "",
-          unitPrice: Number(item.sellingPrice || 0),
+          unitPrice: Number(item.sellingPrice || item.unitPrice || 0),
           stock: item.stockOnHand ?? 0,
           tax: Number(item.tax || 0),
           description: item.description || "",
@@ -240,20 +108,27 @@ const SalesOrderPage = () => {
         setProducts(normalized);
       }
     } catch (err) {
-      setError("Failed to load data");
+      setError("Failed to load data. Please check your connection.");
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   // Generate new order number
-  const generateOrderNumber = () => {
+  const generateOrderNumber = useCallback(() => {
     const year = new Date().getFullYear();
     const nextNum = salesOrders.length + 1;
     return `SO-${year}-${String(nextNum).padStart(4, "0")}`;
-  };
+  }, [salesOrders.length]);
 
-  // Filter sales orders
+  // Filter orders - memoized for performance
   const filteredOrders = useMemo(() => {
     let result = [...salesOrders];
 
@@ -285,8 +160,8 @@ const SalesOrderPage = () => {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (order) =>
-          order.orderNumber.toLowerCase().includes(query) ||
-          order.customer?.name.toLowerCase().includes(query) ||
+          order.orderNumber?.toLowerCase().includes(query) ||
+          order.customer?.name?.toLowerCase().includes(query) ||
           order.customer?.company?.toLowerCase().includes(query)
       );
     }
@@ -294,42 +169,105 @@ const SalesOrderPage = () => {
     return result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [salesOrders, activeStatusFilter, activePaymentFilter, selectedCustomer, dateRange, searchQuery]);
 
-  // Order counts
-  const orderCounts = useMemo(() => ({
-    all: salesOrders.length,
-    draft: salesOrders.filter((o) => o.status === "draft").length,
-    confirmed: salesOrders.filter((o) => o.status === "confirmed").length,
-    delivered: salesOrders.filter((o) => o.status === "delivered").length,
-    invoiced: salesOrders.filter((o) => o.status === "invoiced").length,
-    cancelled: salesOrders.filter((o) => o.status === "cancelled").length,
-  }), [salesOrders]);
-
-  // Handlers
-  const handleCreateOrder = async (orderData) => {
-    const result = await apiRequest(API_ENDPOINTS.salesOrders, {
-      method: "POST",
-      body: JSON.stringify(orderData),
+  // Calculate order counts by status
+  const orderCounts = useMemo(() => {
+    const counts = { all: salesOrders.length };
+    ORDER_STATUS_CONFIG.forEach(({ key }) => {
+      if (key !== "all") {
+        counts[key] = salesOrders.filter((o) => o.status === key).length;
+      }
     });
+    return counts;
+  }, [salesOrders]);
 
-    if (result.success) {
-      setSalesOrders((prev) => [result.data, ...prev]);
-    } else {
-      alert(result.error || "Failed to create order");
+  // CRUD Handlers
+  const handleCreateOrder = async (orderData) => {
+    try {
+      // Prepare data for backend
+      const payload = {
+        customerId: parseInt(orderData.customerId),
+        orderDate: orderData.orderDate,
+        expectedDeliveryDate: orderData.expectedDeliveryDate,
+        status: orderData.status || "draft",
+        paymentStatus: orderData.paymentStatus || "unpaid",
+        paymentMethod: orderData.paymentMethod || null,
+        dueDate: orderData.dueDate || null,
+        advancePayment: parseFloat(orderData.advancePayment) || 0,
+        notes: orderData.notes || "",
+        items: orderData.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: item.discount || 0,
+          tax: item.tax || 0,
+        })),
+      };
+
+      const result = await apiRequest(API_ENDPOINTS.salesOrders, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (result.success) {
+        // Normalize the returned order
+        const newOrder = {
+          ...result.data,
+          customer: result.data.customer || customers.find(c => c.id === payload.customerId) || {},
+        };
+        setSalesOrders((prev) => [newOrder, ...prev]);
+        setIsCreateModalOpen(false);
+        return { success: true };
+      } else {
+        alert(result.error || "Failed to create order");
+        return { success: false, error: result.error };
+      }
+    } catch (err) {
+      alert("An error occurred while creating the order");
+      return { success: false, error: err.message };
     }
   };
 
   const handleUpdateOrder = async (orderData) => {
-    const result = await apiRequest(`${API_ENDPOINTS.salesOrders}/${orderData.id}`, {
-      method: "PATCH",
-      body: JSON.stringify(orderData),
-    });
+    try {
+      const payload = {
+        customerId: parseInt(orderData.customerId),
+        orderDate: orderData.orderDate,
+        expectedDeliveryDate: orderData.expectedDeliveryDate,
+        paymentMethod: orderData.paymentMethod || null,
+        dueDate: orderData.dueDate || null,
+        advancePayment: parseFloat(orderData.advancePayment) || 0,
+        notes: orderData.notes || "",
+        items: orderData.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: item.discount || 0,
+          tax: item.tax || 0,
+        })),
+      };
 
-    if (result.success) {
-      setSalesOrders((prev) =>
-        prev.map((order) => (order.id === orderData.id ? result.data : order))
-      );
-    } else {
-      alert(result.error || "Failed to update order");
+      const result = await apiRequest(`${API_ENDPOINTS.salesOrders}/${orderData.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      });
+
+      if (result.success) {
+        setSalesOrders((prev) =>
+          prev.map((order) => (order.id === orderData.id ? {
+            ...result.data,
+            customer: result.data.customer || order.customer,
+          } : order))
+        );
+        setIsCreateModalOpen(false);
+        setEditingOrder(null);
+        return { success: true };
+      } else {
+        alert(result.error || "Failed to update order");
+        return { success: false, error: result.error };
+      }
+    } catch (err) {
+      alert("An error occurred while updating the order");
+      return { success: false, error: err.message };
     }
   };
 
@@ -338,16 +276,39 @@ const SalesOrderPage = () => {
       alert("Only draft orders can be deleted.");
       return;
     }
-    if (window.confirm(`Are you sure you want to delete order ${order.orderNumber}?`)) {
-      const result = await apiRequest(`${API_ENDPOINTS.salesOrders}/${order.id}`, {
-        method: "DELETE",
-      });
+    if (!window.confirm(`Are you sure you want to delete order ${order.orderNumber}?`)) {
+      return;
+    }
 
-      if (result.success) {
-        setSalesOrders((prev) => prev.filter((o) => o.id !== order.id));
-      } else {
-        alert(result.error || "Failed to delete order");
+    const result = await apiRequest(`${API_ENDPOINTS.salesOrders}/${order.id}`, {
+      method: "DELETE",
+    });
+
+    if (result.success) {
+      setSalesOrders((prev) => prev.filter((o) => o.id !== order.id));
+    } else {
+      alert(result.error || "Failed to delete order");
+    }
+  };
+
+  const handleUpdateStatus = async (order, newStatus) => {
+    const result = await apiRequest(`${API_ENDPOINTS.salesOrders}/${order.id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: newStatus }),
+    });
+
+    if (result.success) {
+      setSalesOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? { ...o, status: newStatus } : o))
+      );
+      // Refresh viewing order if open
+      if (viewingOrder?.id === order.id) {
+        setViewingOrder({ ...viewingOrder, status: newStatus });
       }
+      return { success: true };
+    } else {
+      alert(result.error || `Failed to update order status`);
+      return { success: false };
     }
   };
 
@@ -356,20 +317,10 @@ const SalesOrderPage = () => {
       alert("This order cannot be cancelled.");
       return;
     }
-    if (window.confirm(`Are you sure you want to cancel order ${order.orderNumber}?`)) {
-      const result = await apiRequest(`${API_ENDPOINTS.salesOrders}/${order.id}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ status: "cancelled" }),
-      });
-
-      if (result.success) {
-        setSalesOrders((prev) =>
-          prev.map((o) => (o.id === order.id ? { ...o, status: "cancelled" } : o))
-        );
-      } else {
-        alert(result.error || "Failed to cancel order");
-      }
+    if (!window.confirm(`Are you sure you want to cancel order ${order.orderNumber}?`)) {
+      return;
     }
+    await handleUpdateStatus(order, "cancelled");
   };
 
   const handleConfirmOrder = async (order) => {
@@ -377,37 +328,48 @@ const SalesOrderPage = () => {
       alert("Only draft orders can be confirmed.");
       return;
     }
+    await handleUpdateStatus(order, "confirmed");
+  };
 
-    const result = await apiRequest(`${API_ENDPOINTS.salesOrders}/${order.id}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status: "confirmed" }),
-    });
-
-    if (result.success) {
-      setSalesOrders((prev) =>
-        prev.map((o) => (o.id === order.id ? { ...o, status: "confirmed" } : o))
-      );
-    } else {
-      alert(result.error || "Failed to confirm order");
+  const handleMarkDelivered = async (order) => {
+    if (order.status !== "confirmed") {
+      alert("Only confirmed orders can be marked as delivered.");
+      return;
     }
+    await handleUpdateStatus(order, "delivered");
   };
 
   const handleDuplicateOrder = async (order) => {
-    const duplicatedOrder = {
-      ...order,
-      orderNumber: undefined, // Let backend generate
+    const duplicatedData = {
+      customerId: order.customerId,
+      orderDate: new Date().toISOString().split("T")[0],
+      expectedDeliveryDate: order.expectedDeliveryDate,
       status: "draft",
       paymentStatus: "unpaid",
-      orderDate: new Date().toISOString().split("T")[0],
+      paymentMethod: order.paymentMethod,
+      dueDate: "",
+      advancePayment: 0,
+      notes: order.notes,
+      items: order.items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: parseFloat(item.unitPrice),
+        discount: parseFloat(item.discount) || 0,
+        tax: parseFloat(item.tax) || 0,
+      })),
     };
 
     const result = await apiRequest(API_ENDPOINTS.salesOrders, {
       method: "POST",
-      body: JSON.stringify(duplicatedOrder),
+      body: JSON.stringify(duplicatedData),
     });
 
     if (result.success) {
-      setSalesOrders((prev) => [result.data, ...prev]);
+      const newOrder = {
+        ...result.data,
+        customer: order.customer,
+      };
+      setSalesOrders((prev) => [newOrder, ...prev]);
     } else {
       alert(result.error || "Failed to duplicate order");
     }
@@ -418,7 +380,25 @@ const SalesOrderPage = () => {
       alert("Only draft orders can be edited.");
       return;
     }
-    setEditingOrder(order);
+    // Normalize the order data for editing
+    const editData = {
+      ...order,
+      items: order.items.map((item) => ({
+        ...item,
+        productId: item.productId,
+        product: products.find((p) => p.id === item.productId) || {
+          id: item.productId,
+          name: item.productName,
+          sku: item.productSku,
+          stock: 999, // Assume available if not found
+        },
+        quantity: item.quantity,
+        unitPrice: parseFloat(item.unitPrice),
+        discount: parseFloat(item.discount) || 0,
+        tax: parseFloat(item.tax) || 0,
+      })),
+    };
+    setEditingOrder(editData);
     setIsCreateModalOpen(true);
   };
 
@@ -433,20 +413,66 @@ const SalesOrderPage = () => {
       return;
     }
 
-    const result = await apiRequest(`${API_ENDPOINTS.salesOrders}/${order.id}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status: "invoiced" }),
+    const result = await apiRequest(API_ENDPOINTS.invoices, {
+      method: "POST",
+      body: JSON.stringify({
+        salesOrderId: order.id,
+        customerId: order.customerId,
+        status: "finalized",
+        paymentStatus: "unpaid",
+      }),
     });
 
     if (result.success) {
-      setSalesOrders((prev) =>
-        prev.map((o) => (o.id === order.id ? { ...o, status: "invoiced" } : o))
-      );
-      alert(`Order ${order.orderNumber} has been converted to invoice.`);
+      // Update order status to invoiced
+      await handleUpdateStatus(order, "invoiced");
+      navigate(`/sales/invoices/${result.data.id}`);
     } else {
       alert(result.error || "Failed to convert to invoice");
     }
   };
+
+  const handleRefresh = () => {
+    setSearchQuery("");
+    setActiveStatusFilter("all");
+    setActivePaymentFilter("all");
+    setSelectedCustomer("all");
+    setDateRange({ start: "", end: "" });
+    fetchAllData(true);
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <FiLoader className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading sales orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && salesOrders.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FiFileText className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load</h3>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <button
+            onClick={() => fetchAllData()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -466,23 +492,22 @@ const SalesOrderPage = () => {
 
             <div className="flex items-center gap-3">
               <button
-                onClick={() => {
-                  setSalesOrders(initialSalesOrders);
-                  setSearchQuery("");
-                  setActiveStatusFilter("all");
-                  setActivePaymentFilter("all");
-                }}
-                className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
                 title="Refresh"
               >
-                <FiRefreshCw className="w-5 h-5" />
+                <FiRefreshCw className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`} />
               </button>
               <button className="hidden sm:flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <FiDownload className="w-4 h-4" />
                 Export
               </button>
               <button
-                onClick={() => navigate("/sales/orders/new")}
+                onClick={() => {
+                  setEditingOrder(null);
+                  setIsCreateModalOpen(true);
+                }}
                 className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-colors"
               >
                 <FiPlus className="w-4 h-4" />
@@ -493,12 +518,16 @@ const SalesOrderPage = () => {
 
           {/* Status Stats */}
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mt-6">
-            <StatusCard label="All" count={orderCounts.all} active={activeStatusFilter === "all"} onClick={() => setActiveStatusFilter("all")} color="blue" />
-            <StatusCard label="Draft" count={orderCounts.draft} active={activeStatusFilter === "draft"} onClick={() => setActiveStatusFilter("draft")} color="gray" />
-            <StatusCard label="Confirmed" count={orderCounts.confirmed} active={activeStatusFilter === "confirmed"} onClick={() => setActiveStatusFilter("confirmed")} color="indigo" />
-            <StatusCard label="Delivered" count={orderCounts.delivered} active={activeStatusFilter === "delivered"} onClick={() => setActiveStatusFilter("delivered")} color="green" />
-            <StatusCard label="Invoiced" count={orderCounts.invoiced} active={activeStatusFilter === "invoiced"} onClick={() => setActiveStatusFilter("invoiced")} color="purple" />
-            <StatusCard label="Cancelled" count={orderCounts.cancelled} active={activeStatusFilter === "cancelled"} onClick={() => setActiveStatusFilter("cancelled")} color="red" />
+            {ORDER_STATUS_CONFIG.map(({ key, label, color }) => (
+              <StatusCard
+                key={key}
+                label={label}
+                count={orderCounts[key] || 0}
+                active={activeStatusFilter === key}
+                onClick={() => setActiveStatusFilter(key)}
+                color={color}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -516,6 +545,7 @@ const SalesOrderPage = () => {
         customers={customers}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
+        paymentFilters={PAYMENT_STATUS_CONFIG}
       />
 
       {/* Main Content */}
@@ -536,6 +566,7 @@ const SalesOrderPage = () => {
           onConfirm={handleConfirmOrder}
           onDuplicate={handleDuplicateOrder}
           onConvertToInvoice={handleConvertToInvoice}
+          onMarkDelivered={handleMarkDelivered}
         />
       </div>
 
@@ -566,31 +597,24 @@ const SalesOrderPage = () => {
         onCancel={handleCancelOrder}
         onConvertToInvoice={handleConvertToInvoice}
         onDuplicate={handleDuplicateOrder}
+        onMarkDelivered={handleMarkDelivered}
       />
     </div>
   );
 };
 
-// Status Card Component
+// Reusable Status Card Component
 const StatusCard = ({ label, count, active, onClick, color }) => {
-  const colorStyles = {
-    blue: { bg: active ? "bg-blue-600" : "bg-blue-50", text: active ? "text-white" : "text-blue-700" },
-    gray: { bg: active ? "bg-gray-600" : "bg-gray-100", text: active ? "text-white" : "text-gray-700" },
-    indigo: { bg: active ? "bg-indigo-600" : "bg-indigo-50", text: active ? "text-white" : "text-indigo-700" },
-    green: { bg: active ? "bg-green-600" : "bg-green-50", text: active ? "text-white" : "text-green-700" },
-    purple: { bg: active ? "bg-purple-600" : "bg-purple-50", text: active ? "text-white" : "text-purple-700" },
-    red: { bg: active ? "bg-red-600" : "bg-red-50", text: active ? "text-white" : "text-red-700" },
-  };
-
-  const styles = colorStyles[color] || colorStyles.blue;
+  const colorConfig = statusCardColors[color] || statusCardColors.blue;
+  const state = active ? colorConfig.active : colorConfig.inactive;
 
   return (
     <button
       onClick={onClick}
-      className={`${styles.bg} rounded-xl p-3 text-left transition-all duration-200 hover:shadow-md`}
+      className={`${state.bg} ${state.text} rounded-xl p-3 text-left transition-all duration-200 hover:shadow-md`}
     >
-      <p className={`text-xs font-medium ${styles.text}`}>{label}</p>
-      <p className={`text-xl font-bold ${styles.text} mt-1`}>{count}</p>
+      <p className="text-xs font-medium">{label}</p>
+      <p className="text-xl font-bold mt-1">{count}</p>
     </button>
   );
 };

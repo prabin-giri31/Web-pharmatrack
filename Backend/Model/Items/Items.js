@@ -55,6 +55,10 @@ const Item = sequelize.define("Item", {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  expiryDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
 }, {
   tableName: "items",   // optional, default is 'Items'
   timestamps: true,     // adds createdAt and updatedAt

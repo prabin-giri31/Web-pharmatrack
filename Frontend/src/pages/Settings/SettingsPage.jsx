@@ -72,8 +72,7 @@ const SettingsPage = () => {
                 onChange={(e) => setSystemPrefs((prev) => ({ ...prev, currency: e.target.value }))}
                 className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
               >
-                <option value="NPR">NPR</option>
-                <option value="USD">USD</option>
+                <option value="NPR">NPR (Rs.)</option>
               </select>
             </label>
             <label className="text-sm text-gray-700">

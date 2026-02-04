@@ -528,7 +528,7 @@ const CreateSalesOrder = () => {
                                     <span className="text-sm font-medium text-gray-900">{product.name}</span>
                                     <span className="text-xs text-gray-500 ml-2">({product.sku})</span>
                                   </div>
-                                  <span className="text-sm text-gray-600">NPR {product.rate.toFixed(2)}</span>
+                                  <span className="text-sm text-gray-600">Rs. {product.rate.toFixed(2)}</span>
                                 </button>
                               ))}
                               {filteredProducts.length === 0 && (
@@ -571,7 +571,7 @@ const CreateSalesOrder = () => {
                       {/* Amount */}
                       <div className="col-span-2 flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-900 text-right flex-1">
-                          {getItemAmount(item).toFixed(2)}
+                          Rs. {getItemAmount(item).toFixed(2)}
                         </span>
                         <button
                           onClick={() => removeItemRow(item.id)}
@@ -623,7 +623,7 @@ const CreateSalesOrder = () => {
                   {/* Sub Total */}
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Sub Total</span>
-                    <span className="text-sm font-medium text-gray-900">{totals.subTotal.toFixed(2)}</span>
+                    <span className="text-sm font-medium text-gray-900">Rs. {totals.subTotal.toFixed(2)}</span>
                   </div>
 
                   {/* Discount */}
@@ -636,7 +636,7 @@ const CreateSalesOrder = () => {
                         className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                       >
                         <option value="percent">%</option>
-                        <option value="amount">NPR</option>
+                        <option value="amount">Rs.</option>
                       </select>
                       <input
                         type="number"
@@ -647,7 +647,7 @@ const CreateSalesOrder = () => {
                         className="w-20 px-2 py-1 text-right border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <span className="text-sm font-medium text-gray-900 w-20 text-right">
-                        {totals.discountAmount.toFixed(2)}
+                        Rs. {totals.discountAmount.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -680,8 +680,8 @@ const CreateSalesOrder = () => {
                   {/* Total */}
                   <div className="pt-3 border-t border-gray-300">
                     <div className="flex justify-between items-center">
-                      <span className="text-base font-semibold text-gray-900">Total ( NPR )</span>
-                      <span className="text-xl font-bold text-blue-600">{totals.total.toFixed(2)}</span>
+                      <span className="text-base font-semibold text-gray-900">Total ( Rs. )</span>
+                      <span className="text-xl font-bold text-blue-600">Rs. {totals.total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
