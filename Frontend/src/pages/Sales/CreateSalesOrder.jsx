@@ -228,8 +228,11 @@ const CreateSalesOrder = () => {
     return result;
   };
 
+  // Submitting state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Handle save
-  const handleSave = (status) => {
+  const handleSave = async (status) => {
     const newErrors = {};
     if (!selectedCustomer) {
       newErrors.customer = "Please select a customer.";
@@ -242,27 +245,48 @@ const CreateSalesOrder = () => {
       return;
     }
 
-    const orderData = {
-      orderNumber,
-      customer: selectedCustomer,
-      referenceNumber,
-      orderDate,
-      shipmentDate,
-      deliveryMethod,
-      salesperson,
-      items: items.filter((item) => item.productId),
-      customerNotes,
-      discountType,
-      discountValue,
-      shippingCharges,
-      adjustment,
-      ...totals,
-      status,
-    };
+    setIsSubmitting(true);
 
-    console.log("Saving order:", orderData);
-    alert(`Sales Order ${status === "draft" ? "saved as draft" : "confirmed"}!`);
-    navigate("/sales/orders");
+    try {
+      // Format items for API
+      const formattedItems = items
+        .filter((item) => item.productId)
+        .map((item) => ({
+          productId: item.productId,
+          quantity: parseInt(item.quantity),
+          unitPrice: parseFloat(item.rate),
+          discount: 0,
+          tax: 0,
+        }));
+
+      const orderData = {
+        customerId: selectedCustomer.id,
+        orderDate: orderDate,
+        expectedDeliveryDate: shipmentDate || null,
+        status: status,
+        paymentStatus: "unpaid",
+        paymentMethod: deliveryMethod || null,
+        items: formattedItems,
+        notes: customerNotes || null,
+      };
+
+      const result = await apiRequest(API_ENDPOINTS.salesOrders, {
+        method: "POST",
+        body: JSON.stringify(orderData),
+      });
+
+      if (result.success) {
+        alert(`Sales Order ${status === "draft" ? "saved as draft" : "confirmed"} successfully!`);
+        navigate("/sales/orders");
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error saving order:", error);
+      alert("Failed to save order. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -283,21 +307,24 @@ const CreateSalesOrder = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate("/sales/orders")}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleSave("draft")}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
               >
-                Save as Draft
+                {isSubmitting ? "Saving..." : "Save as Draft"}
               </button>
               <button
                 onClick={() => handleSave("confirmed")}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
-                Save and Send
+                {isSubmitting ? "Saving..." : "Save and Send"}
               </button>
             </div>
           </div>

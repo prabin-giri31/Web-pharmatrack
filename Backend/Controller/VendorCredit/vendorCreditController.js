@@ -52,7 +52,7 @@ export const getAllVendorCredits = async (req, res) => {
                         {
                             model: Item,
                             as: 'item',
-                            attributes: ['id', 'itemName', 'sku']
+                            attributes: ['id', 'name', 'sku']
                         }
                     ]
                 }
@@ -101,7 +101,7 @@ export const getVendorCreditById = async (req, res) => {
                         {
                             model: Item,
                             as: 'item',
-                            attributes: ['id', 'itemName', 'sku', 'purchasePrice']
+                            attributes: ['id', 'name', 'sku', 'costPrice']
                         }
                     ]
                 }

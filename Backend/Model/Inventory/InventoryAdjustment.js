@@ -11,6 +11,31 @@ const InventoryAdjustment = sequelize.define("InventoryAdjustment", {
       key: 'id',
     }
   },
+  itemId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'items',
+      key: 'id',
+    }
+  },
+  itemName: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  quantity: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+  },
+  previousStock: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  newStock: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   date: {
     type: DataTypes.DATEONLY,
     allowNull: false,

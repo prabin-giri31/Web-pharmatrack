@@ -16,6 +16,8 @@ import {
   FiAlertCircle,
   FiCheckCircle,
   FiClock,
+  FiBox,
+  FiLoader,
 } from "react-icons/fi";
 import { AiOutlinePlus } from "react-icons/ai";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -38,6 +40,12 @@ const TopNavbar = ({ onMenuClick }) => {
   const [openMenu, setOpenMenu] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  
+  // Live Search State
+  const [searchResults, setSearchResults] = useState({ items: [], customers: [], salesOrders: [] });
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchDebounceRef = useRef(null);
   
   // Notifications State
   const [notifications, setNotifications] = useState([]);
@@ -95,6 +103,84 @@ const TopNavbar = ({ onMenuClick }) => {
     }
   }, [mobileSearchOpen]);
 
+  // Debounced live search
+  const performLiveSearch = useCallback(async (query) => {
+    if (!query.trim() || query.trim().length < 2) {
+      setSearchResults({ items: [], customers: [], salesOrders: [] });
+      setShowSearchDropdown(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    setShowSearchDropdown(true);
+    
+    try {
+      const result = await apiRequest(`${API_ENDPOINTS.search}?q=${encodeURIComponent(query)}`);
+      if (result.success) {
+        setSearchResults(result.data || { items: [], customers: [], salesOrders: [] });
+      }
+    } catch (error) {
+      console.error("Search failed:", error);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  // Handle search input change with debounce
+  const handleSearchChange = useCallback((e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    
+    // Clear previous debounce
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    
+    // Debounce the search
+    searchDebounceRef.current = setTimeout(() => {
+      performLiveSearch(value);
+    }, 300);
+  }, [performLiveSearch]);
+
+  // Close search dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchInputRef.current && !searchInputRef.current.closest('.search-container')?.contains(e.target)) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Check if there are any search results
+  const hasSearchResults = useMemo(() => {
+    return searchResults.items.length > 0 || 
+           searchResults.customers.length > 0 || 
+           searchResults.salesOrders.length > 0;
+  }, [searchResults]);
+
+  // Handle search result click
+  const handleSearchResultClick = useCallback((type, item) => {
+    setShowSearchDropdown(false);
+    setSearchTerm("");
+    setMobileSearchOpen(false);
+    
+    switch (type) {
+      case "item":
+        navigate(`/items?search=${encodeURIComponent(item.name)}`);
+        break;
+      case "customer":
+        navigate(`/sales/customers?search=${encodeURIComponent(item.name)}`);
+        break;
+      case "order":
+        navigate(`/sales/orders?search=${encodeURIComponent(item.orderNumber)}`);
+        break;
+      default:
+        break;
+    }
+  }, [navigate]);
+
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -134,7 +220,7 @@ const TopNavbar = ({ onMenuClick }) => {
     clearAuthData();
     setUser(null);
     setToken(null);
-    navigate("/login");
+    window.location.replace("/login");
   }, [navigate]);
 
   // Handle search submit
@@ -205,7 +291,7 @@ const TopNavbar = ({ onMenuClick }) => {
   const quickCreateItems = [
     { label: "New Sales Order", path: "/sales/orders/new", icon: FiShoppingCart },
     { label: "New Customer", path: "/sales/customers/new", icon: FiUsers },
-    { label: "New Medicine", path: "/inventory/items/new", icon: FiPackage },
+    { label: "New Medicine", path: "/items/new", icon: FiPackage },
     { label: "New Supplier", path: "/purchases/suppliers/new", icon: FiTruck },
     { label: "New Invoice", path: "/sales/invoices/new", icon: FiFileText },
   ];
@@ -270,28 +356,139 @@ const TopNavbar = ({ onMenuClick }) => {
       <div className="w-2 sm:w-6" />
 
       {/* Desktop Search */}
-      <form
-        onSubmit={handleSearchSubmit}
-        className="hidden md:flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg focus-within:ring-2 focus-within:ring-blue-500"
-      >
-        <FiSearch className="text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search medicines, orders, customers..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-transparent outline-none text-sm w-48 lg:w-64 placeholder-gray-400"
-        />
-        {searchTerm && (
-          <button 
-            type="button" 
-            onClick={() => setSearchTerm("")}
-            className="text-gray-400 hover:text-white"
-          >
-            <FiX size={14} />
-          </button>
+      <div className="hidden md:block relative search-container">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg focus-within:ring-2 focus-within:ring-blue-500"
+        >
+          <FiSearch className="text-gray-400" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search medicines, orders, customers..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            onFocus={() => searchTerm.trim().length >= 2 && setShowSearchDropdown(true)}
+            className="bg-transparent outline-none text-sm w-48 lg:w-64 placeholder-gray-400"
+          />
+          {searchLoading && (
+            <FiLoader className="text-gray-400 animate-spin" size={14} />
+          )}
+          {searchTerm && !searchLoading && (
+            <button 
+              type="button" 
+              onClick={() => {
+                setSearchTerm("");
+                setShowSearchDropdown(false);
+                setSearchResults({ items: [], customers: [], salesOrders: [] });
+              }}
+              className="text-gray-400 hover:text-white"
+            >
+              <FiX size={14} />
+            </button>
+          )}
+        </form>
+
+        {/* Search Results Dropdown */}
+        {showSearchDropdown && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-80 overflow-y-auto z-50">
+            {searchLoading ? (
+              <div className="flex items-center justify-center py-8 text-gray-500">
+                <FiLoader className="animate-spin mr-2" /> Searching...
+              </div>
+            ) : !hasSearchResults ? (
+              <div className="py-6 text-center text-gray-500 text-sm">
+                No results found for "{searchTerm}"
+              </div>
+            ) : (
+              <>
+                {/* Items Section */}
+                {searchResults.items.length > 0 && (
+                  <div className="border-b border-gray-100">
+                    <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                      <FiBox size={12} /> Medicines ({searchResults.items.length})
+                    </div>
+                    {searchResults.items.slice(0, 5).map((item) => (
+                      <button
+                        key={`item-${item.id}`}
+                        onClick={() => handleSearchResultClick("item", item)}
+                        className="w-full px-3 py-2 text-left hover:bg-blue-50 flex items-center justify-between group transition-colors"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600">{item.name}</p>
+                          <p className="text-xs text-gray-500">{item.genericName || item.sku || ""}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${item.stockOnHand > 10 ? 'bg-green-100 text-green-700' : item.stockOnHand > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                          Stock: {item.stockOnHand || 0}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Customers Section */}
+                {searchResults.customers.length > 0 && (
+                  <div className="border-b border-gray-100">
+                    <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                      <FiUsers size={12} /> Customers ({searchResults.customers.length})
+                    </div>
+                    {searchResults.customers.slice(0, 5).map((customer) => (
+                      <button
+                        key={`customer-${customer.id}`}
+                        onClick={() => handleSearchResultClick("customer", customer)}
+                        className="w-full px-3 py-2 text-left hover:bg-blue-50 flex items-center justify-between group transition-colors"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600">{customer.name}</p>
+                          <p className="text-xs text-gray-500">{customer.email || customer.phone || ""}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Sales Orders Section */}
+                {searchResults.salesOrders.length > 0 && (
+                  <div>
+                    <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                      <FiShoppingCart size={12} /> Sales Orders ({searchResults.salesOrders.length})
+                    </div>
+                    {searchResults.salesOrders.slice(0, 5).map((order) => (
+                      <button
+                        key={`order-${order.id}`}
+                        onClick={() => handleSearchResultClick("order", order)}
+                        className="w-full px-3 py-2 text-left hover:bg-blue-50 flex items-center justify-between group transition-colors"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600">#{order.orderNumber}</p>
+                          <p className="text-xs text-gray-500">{order.Customer?.name || "Unknown Customer"}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${
+                          order.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* View All Results Link */}
+                {hasSearchResults && (
+                  <button
+                    onClick={handleSearchSubmit}
+                    className="w-full px-3 py-2 text-center text-sm text-blue-600 hover:bg-blue-50 font-medium transition-colors"
+                  >
+                    View all results →
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         )}
-      </form>
+      </div>
 
       {/* Mobile Search Toggle */}
       <button
@@ -541,7 +738,7 @@ const TopNavbar = ({ onMenuClick }) => {
 
       {/* Mobile Search Panel */}
       {mobileSearchOpen && (
-        <div className="fixed top-14 left-0 right-0 bg-gray-800 px-4 py-3 md:hidden z-50 border-b border-gray-700 animate-in slide-in-from-top duration-200">
+        <div className="fixed top-14 left-0 right-0 bg-gray-800 px-4 py-3 md:hidden z-50 border-b border-gray-700 animate-in slide-in-from-top duration-200 search-container">
           <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
             <FiSearch className="text-gray-400" />
             <input
@@ -549,19 +746,80 @@ const TopNavbar = ({ onMenuClick }) => {
               type="text"
               placeholder="Search medicines, orders, customers..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="flex-1 bg-transparent outline-none text-sm text-white placeholder-gray-400"
             />
-            {searchTerm && (
+            {searchLoading && (
+              <FiLoader className="text-gray-400 animate-spin" size={14} />
+            )}
+            {searchTerm && !searchLoading && (
               <button 
                 type="button" 
-                onClick={() => setSearchTerm("")}
+                onClick={() => {
+                  setSearchTerm("");
+                  setShowSearchDropdown(false);
+                  setSearchResults({ items: [], customers: [], salesOrders: [] });
+                }}
                 className="text-gray-400 hover:text-white"
               >
                 <FiX size={14} />
               </button>
             )}
           </form>
+          
+          {/* Mobile Search Results */}
+          {showSearchDropdown && (
+            <div className="mt-2 bg-white rounded-lg shadow-xl max-h-64 overflow-y-auto">
+              {searchLoading ? (
+                <div className="flex items-center justify-center py-6 text-gray-500">
+                  <FiLoader className="animate-spin mr-2" /> Searching...
+                </div>
+              ) : !hasSearchResults ? (
+                <div className="py-4 text-center text-gray-500 text-sm">
+                  No results found
+                </div>
+              ) : (
+                <>
+                  {searchResults.items.slice(0, 3).map((item) => (
+                    <button
+                      key={`m-item-${item.id}`}
+                      onClick={() => handleSearchResultClick("item", item)}
+                      className="w-full px-3 py-2 text-left hover:bg-blue-50 flex items-center gap-2 border-b border-gray-100"
+                    >
+                      <FiBox className="text-blue-500" size={14} />
+                      <span className="text-sm text-gray-900">{item.name}</span>
+                    </button>
+                  ))}
+                  {searchResults.customers.slice(0, 3).map((customer) => (
+                    <button
+                      key={`m-customer-${customer.id}`}
+                      onClick={() => handleSearchResultClick("customer", customer)}
+                      className="w-full px-3 py-2 text-left hover:bg-blue-50 flex items-center gap-2 border-b border-gray-100"
+                    >
+                      <FiUsers className="text-green-500" size={14} />
+                      <span className="text-sm text-gray-900">{customer.name}</span>
+                    </button>
+                  ))}
+                  {searchResults.salesOrders.slice(0, 3).map((order) => (
+                    <button
+                      key={`m-order-${order.id}`}
+                      onClick={() => handleSearchResultClick("order", order)}
+                      className="w-full px-3 py-2 text-left hover:bg-blue-50 flex items-center gap-2 border-b border-gray-100"
+                    >
+                      <FiShoppingCart className="text-orange-500" size={14} />
+                      <span className="text-sm text-gray-900">#{order.orderNumber}</span>
+                    </button>
+                  ))}
+                  <button
+                    onClick={handleSearchSubmit}
+                    className="w-full px-3 py-2 text-center text-sm text-blue-600 font-medium"
+                  >
+                    View all results
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
     </header>

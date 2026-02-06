@@ -37,11 +37,34 @@ export const User = sequelize.define("User", {
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: "staff",
+    validate: {
+      isIn: [["super_admin", "admin", "staff"]],
+    },
   },
   status: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: "active",
+    defaultValue: "pending",
+    validate: {
+      isIn: [["pending", "active", "inactive", "locked"]],
+    },
+  },
+  isApproved: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
+  approvedBy: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: "users",
+      key: "id",
+    },
+  },
+  approvedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
   },
   profilePhoto: {
     type: DataTypes.TEXT,
@@ -50,6 +73,32 @@ export const User = sequelize.define("User", {
   lastLoginAt: {
     type: DataTypes.DATE,
     allowNull: true,
+  },
+  lastLoginIp: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  loginAttempts: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+  },
+  lockedUntil: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  passwordResetToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  passwordResetExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  forceLogout: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
   },
   password: {
     type: DataTypes.STRING,

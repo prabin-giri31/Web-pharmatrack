@@ -15,9 +15,13 @@ export const globalSearch = async (req, res) => {
       Item.findAll({
         where: {
           userId,
-          name: { [Op.iLike]: like },
+          [Op.or]: [
+            { name: { [Op.iLike]: like } },
+            { sku: { [Op.iLike]: like } },
+            { genericName: { [Op.iLike]: like } },
+          ],
         },
-        attributes: ["id", "name", "sku", "stockOnHand", "sellingPrice"],
+        attributes: ["id", "name", "sku", "genericName", "stockOnHand", "sellingPrice"],
         limit: 20,
       }),
       Customer.findAll({
@@ -26,6 +30,7 @@ export const globalSearch = async (req, res) => {
           [Op.or]: [
             { name: { [Op.iLike]: like } },
             { email: { [Op.iLike]: like } },
+            { phone: { [Op.iLike]: like } },
           ],
         },
         attributes: ["id", "name", "company", "email", "phone"],
@@ -37,6 +42,13 @@ export const globalSearch = async (req, res) => {
           orderNumber: { [Op.iLike]: like },
         },
         attributes: ["id", "orderNumber", "status", "orderDate", "customerId"],
+        include: [
+          {
+            model: Customer,
+            as: "Customer",
+            attributes: ["id", "name"],
+          },
+        ],
         limit: 20,
       }),
     ]);

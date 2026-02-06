@@ -11,8 +11,32 @@ import { PurchaseReceive, PurchaseReceiveItem } from "./PurchaseReceive/index.js
 import { Bill, BillItem } from "./Bill/index.js";
 import { Payment, PaymentItem } from "./Payment/index.js";
 import { VendorCredit, VendorCreditItem } from "./VendorCredit/index.js";
+import { UserActivity, SystemSettings } from "./SuperAdmin/index.js";
 
 // Define relationships
+
+// InventoryAdjustment belongs to Item
+InventoryAdjustment.belongsTo(Item, {
+    foreignKey: "itemId",
+    as: "item",
+});
+
+Item.hasMany(InventoryAdjustment, {
+    foreignKey: "itemId",
+    as: "adjustments",
+});
+
+// InventoryAdjustment belongs to User
+InventoryAdjustment.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+});
+
+User.hasMany(InventoryAdjustment, {
+    foreignKey: "userId",
+    as: "adjustments",
+});
+
 // SalesOrder belongs to Customer
 SalesOrder.belongsTo(Customer, {
     foreignKey: "customerId",
@@ -251,4 +275,21 @@ Item.hasMany(VendorCreditItem, {
     as: "vendorCreditItems",
 });
 
-export { User, Item, InventoryAdjustment, ItemsGroup, MedicineType, DiseaseCategory, Customer, SalesOrder, SalesOrderItem, Invoice, InvoiceItem, Notification, Supplier, PurchaseReceive, PurchaseReceiveItem, Bill, BillItem, Payment, PaymentItem, VendorCredit, VendorCreditItem };
+// UserActivity relationships
+UserActivity.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+});
+
+User.hasMany(UserActivity, {
+    foreignKey: "userId",
+    as: "activities",
+});
+
+// SystemSettings relationship for updatedBy
+SystemSettings.belongsTo(User, {
+    foreignKey: "updatedBy",
+    as: "updater",
+});
+
+export { User, Item, InventoryAdjustment, ItemsGroup, MedicineType, DiseaseCategory, Customer, SalesOrder, SalesOrderItem, Invoice, InvoiceItem, Notification, Supplier, PurchaseReceive, PurchaseReceiveItem, Bill, BillItem, Payment, PaymentItem, VendorCredit, VendorCreditItem, UserActivity, SystemSettings };

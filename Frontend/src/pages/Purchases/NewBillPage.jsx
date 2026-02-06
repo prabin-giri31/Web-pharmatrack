@@ -114,11 +114,11 @@ const NewBillPage = () => {
         if (!exists) {
             setBillItems([...billItems, {
                 itemId: item.id,
-                itemName: item.itemName,
+                itemName: item.name,
                 sku: item.sku,
-                description: item.itemName,
+                description: item.name,
                 quantity: 1,
-                unitPrice: item.purchasePrice || 0,
+                unitPrice: item.costPrice || 0,
                 discount: 0,
                 discountType: 'amount',
                 tax: 0
@@ -214,7 +214,7 @@ const NewBillPage = () => {
 
     const totals = calculateTotals();
     const filteredItems = items.filter(item => 
-        item.itemName?.toLowerCase().includes(itemSearchTerm.toLowerCase()) ||
+        item.name?.toLowerCase().includes(itemSearchTerm.toLowerCase()) ||
         item.sku?.toLowerCase().includes(itemSearchTerm.toLowerCase())
     );
 
@@ -535,14 +535,14 @@ const NewBillPage = () => {
                                             className="w-full flex items-center gap-4 p-4 hover:bg-blue-50 rounded-xl transition-colors text-left"
                                         >
                                             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-semibold">
-                                                {item.itemName?.charAt(0)}
+                                                {item.name?.charAt(0)}
                                             </div>
                                             <div className="flex-1">
-                                                <div className="font-medium text-gray-900">{item.itemName}</div>
+                                                <div className="font-medium text-gray-900">{item.name}</div>
                                                 <div className="text-sm text-gray-500">SKU: {item.sku}</div>
                                             </div>
                                             <div className="text-right">
-                                                <div className="font-semibold text-gray-900">Rs. {item.purchasePrice || 0}</div>
+                                                <div className="font-semibold text-gray-900">Rs. {item.costPrice || 0}</div>
                                                 <div className="text-sm text-gray-500">Stock: {item.stockOnHand || 0}</div>
                                             </div>
                                         </button>

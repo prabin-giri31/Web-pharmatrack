@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
-import Sidebar from "../private/Sidebar";
-import TopNavbar from "../private/TopNavbar";
+import SuperAdminSidebar from "../private/SuperAdminSidebar";
+import SuperAdminNavbar from "../private/SuperAdminNavbar";
 
-const PrivateLayout = () => {
+const SuperAdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* TOP BAR - Fixed in component */}
-      <TopNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
+      {/* TOP BAR */}
+      <SuperAdminNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
       {/* BELOW TOP BAR */}
       <div className="flex pt-14">
-        {/* SIDEBAR - Hidden on mobile, shown on lg+ - FIXED POSITION */}
+        {/* SIDEBAR - Hidden on mobile, shown on lg+ */}
         <div className="hidden lg:block fixed left-0 top-14 bottom-0 w-64 overflow-y-auto z-40 shadow-xl">
-          <Sidebar />
+          <SuperAdminSidebar />
         </div>
 
         {/* MOBILE SIDEBAR OVERLAY */}
@@ -28,12 +28,12 @@ const PrivateLayout = () => {
             />
             {/* Sidebar */}
             <div className="fixed inset-y-0 left-0 w-64 z-50 shadow-2xl">
-              <Sidebar onClose={() => setSidebarOpen(false)} />
+              <SuperAdminSidebar onClose={() => setSidebarOpen(false)} />
             </div>
           </div>
         )}
 
-        {/* MAIN CONTENT - Pushed by Sidebar */}
+        {/* MAIN CONTENT */}
         <div className="flex-1 w-full lg:ml-64 min-h-[calc(100vh-3.5rem)] overflow-x-hidden">
           <Outlet />
         </div>
@@ -42,4 +42,4 @@ const PrivateLayout = () => {
   );
 };
 
-export default PrivateLayout;
+export default SuperAdminLayout;

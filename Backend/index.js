@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import { sequelize } from "./Database/db.js";
-import { authRoutes, itemRoutes, inventoryRoutes, customerRoutes, salesOrderRoutes, medicineTypeRoutes, diseaseCategoryRoutes, itemsGroupRoutes, searchRoutes, notificationRoutes, supplierRoutes, dashboardRoutes, invoiceRoutes, purchaseReceiveRoutes, billRoutes, paymentRoutes, vendorCreditRoutes } from "./Routes/index.js";
+import { authRoutes, itemRoutes, inventoryRoutes, customerRoutes, salesOrderRoutes, medicineTypeRoutes, diseaseCategoryRoutes, itemsGroupRoutes, searchRoutes, notificationRoutes, supplierRoutes, dashboardRoutes, invoiceRoutes, purchaseReceiveRoutes, billRoutes, paymentRoutes, vendorCreditRoutes, superAdminRoutes } from "./Routes/index.js";
 import { User } from "./Model/index.js"; // Import models and associations
 import seedAll from "./Database/seeders/seedItemsGroup.js";
 
@@ -34,6 +34,7 @@ app.use("/api/purchase-receives", purchaseReceiveRoutes);
 app.use("/api/bills", billRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/vendor-credits", vendorCreditRoutes);
+app.use("/api/super-admin", superAdminRoutes);
 
 // Health check
 app.get("/", (req, res) => {
@@ -113,6 +114,26 @@ const ensureCustomerUserIds = async () => {
   console.log(`Backfilled ${missingCount} customer rows with userId ${user.id}.`);
 };
 
+// Ensure a Super Admin exists
+const ensureSuperAdmin = async () => {
+  const existingSuperAdmin = await User.findOne({ where: { email: "superadmin31@gmail.com" } });
+  if (!existingSuperAdmin) {
+    await User.create({
+      pharmacyName: "PharmaTrack HQ",
+      ownerName: "Super Admin",
+      email: "superadmin31@gmail.com",
+      phone: "+9771234567890",
+      registrationNumber: "SUPERADMIN-001",
+      address: "PharmaTrack Headquarters",
+      password: "Super@dmin31",
+      role: "super_admin",
+      status: "active",
+      isApproved: true,
+    });
+    console.log("Super Admin created: superadmin31@gmail.com");
+  }
+};
+
 const startServer = async () => {
   let retries = 5;
 
@@ -127,6 +148,9 @@ const startServer = async () => {
 
       // Seed default data
       await seedAll();
+      
+      // Ensure Super Admin exists
+      await ensureSuperAdmin();
 
       const server = app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);

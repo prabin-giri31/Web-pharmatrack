@@ -172,7 +172,7 @@ export const createSalesOrder = async (req, res) => {
             if (product.stockOnHand < item.quantity) {
                 await transaction.rollback();
                 return res.status(400).json({
-                    message: `Insufficient stock for ${product.itemName}. Available: ${product.stockOnHand}, Required: ${item.quantity}`,
+                    message: `Insufficient stock for ${product.name}. Available: ${product.stockOnHand}, Required: ${item.quantity}`,
                 });
             }
 
@@ -188,7 +188,7 @@ export const createSalesOrder = async (req, res) => {
 
             orderItems.push({
                 productId: product.id,
-                productName: product.itemName,
+                productName: product.name,
                 productSku: product.sku,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
@@ -331,7 +331,7 @@ export const updateSalesOrder = async (req, res) => {
 
                 orderItems.push({
                     productId: product.id,
-                    productName: product.itemName,
+                    productName: product.name,
                     productSku: product.sku,
                     quantity: item.quantity,
                     unitPrice: item.unitPrice,

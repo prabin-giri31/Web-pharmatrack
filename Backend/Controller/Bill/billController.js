@@ -46,7 +46,7 @@ export const getAllBills = async (req, res) => {
                         {
                             model: Item,
                             as: 'item',
-                            attributes: ['id', 'itemName', 'sku']
+                            attributes: ['id', 'name', 'sku']
                         }
                     ]
                 }
@@ -90,7 +90,7 @@ export const getBillById = async (req, res) => {
                         {
                             model: Item,
                             as: 'item',
-                            attributes: ['id', 'itemName', 'sku', 'sellingPrice', 'purchasePrice']
+                            attributes: ['id', 'name', 'sku', 'sellingPrice', 'costPrice']
                         }
                     ]
                 }

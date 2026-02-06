@@ -40,6 +40,21 @@ export const API_ENDPOINTS = {
   bills: `${API_BASE_URL}/api/bills`,
   payments: `${API_BASE_URL}/api/payments`,
   vendorCredits: `${API_BASE_URL}/api/vendor-credits`,
+  // Super Admin endpoints
+  superAdmin: {
+    dashboard: `${API_BASE_URL}/api/super-admin/dashboard`,
+    systemOverview: `${API_BASE_URL}/api/super-admin/system-overview`,
+    users: `${API_BASE_URL}/api/super-admin/users`,
+    pendingUsers: `${API_BASE_URL}/api/super-admin/users/pending`,
+    activities: `${API_BASE_URL}/api/super-admin/activities`,
+    loginHistory: `${API_BASE_URL}/api/super-admin/activities/login-history`,
+    suspiciousActivities: `${API_BASE_URL}/api/super-admin/activities/suspicious`,
+    activityStats: `${API_BASE_URL}/api/super-admin/activities/stats`,
+    settings: `${API_BASE_URL}/api/super-admin/settings`,
+    dataExport: `${API_BASE_URL}/api/super-admin/data/export`,
+    backup: `${API_BASE_URL}/api/super-admin/data/backup`,
+    reports: `${API_BASE_URL}/api/super-admin/reports/summary`,
+  },
 };
 
 // Helper function for API calls with better error handling
