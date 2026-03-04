@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     FiFileText, FiSave, FiX, FiPlus, FiTrash2, FiSearch,
-    FiCalendar, FiUser, FiPackage, FiDollarSign, FiPercent, FiChevronDown
+    FiCalendar, FiUser, FiPackage, FiPercent, FiChevronDown
 } from 'react-icons/fi';
+import { FaRupeeSign } from 'react-icons/fa';
 import { API_ENDPOINTS, apiRequest } from '../../config/api';
 
 // Reusable Components
@@ -195,7 +196,15 @@ const NewBillPage = () => {
                 method: 'POST',
                 body: JSON.stringify({
                     ...formData,
-                    items: billItems
+                    supplierId: parseInt(formData.supplierId),
+                    items: billItems.map(item => ({
+                        itemId: item.itemId,
+                        quantity: parseInt(item.quantity) || 1,
+                        rate: parseFloat(item.unitPrice) || 0,
+                        discount: parseFloat(item.discount) || 0,
+                        discountType: item.discountType === 'amount' ? 'fixed' : 'percentage',
+                        tax: parseFloat(item.tax) || 0
+                    }))
                 })
             });
 
@@ -274,7 +283,7 @@ const NewBillPage = () => {
                                     error={errors.supplierId}
                                     options={[
                                         { value: '', label: 'Select Vendor' },
-                                        ...suppliers.map(s => ({ value: s.id, label: s.companyName }))
+                                        ...suppliers.map(s => ({ value: s.id, label: s.displayName || s.companyName || s.name || `Vendor ${s.id}` }))
                                     ]}
                                 />
                                 <FormSelect
@@ -478,7 +487,7 @@ const NewBillPage = () => {
 
                             <div className="mt-6 p-4 bg-blue-50 rounded-xl">
                                 <div className="flex items-center gap-2 text-blue-700">
-                                    <FiDollarSign className="w-5 h-5" />
+                                    <FaRupeeSign className="w-5 h-5" />
                                     <span className="font-medium">Amount Due</span>
                                 </div>
                                 <div className="text-2xl font-bold text-blue-700 mt-1">

@@ -10,6 +10,9 @@ import {
     getAvailableCreditsBySupplier
 } from "../../Controller/VendorCredit/vendorCreditController.js";
 import { authenticate } from "../../Middleware/auth.middleware.js";
+import { validate } from "../../Middleware/validation.middleware.js";
+import { vendorCreditSchema } from "../../Validation/schemas.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 
 const router = express.Router();
 
@@ -25,7 +28,7 @@ router.get("/supplier/:supplierId/available", getAvailableCreditsBySupplier);
 // CRUD routes
 router.get("/", getAllVendorCredits);
 router.get("/:id", getVendorCreditById);
-router.post("/", createVendorCredit);
+router.post("/", validate(vendorCreditSchema), asyncHandler(createVendorCredit));
 router.put("/:id", updateVendorCredit);
 router.delete("/:id", deleteVendorCredit);
 

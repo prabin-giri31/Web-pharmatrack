@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-    FiDollarSign, FiSave, FiX, FiUser, FiCalendar, FiCreditCard,
+    FiSave, FiX, FiUser, FiCalendar, FiCreditCard,
     FiFileText, FiHash, FiChevronDown, FiCheck, FiAlertCircle
 } from 'react-icons/fi';
+import { FaRupeeSign } from 'react-icons/fa';
 import { API_ENDPOINTS, apiRequest } from '../../config/api';
 
 // Reusable Components
@@ -202,15 +203,22 @@ const NewPaymentPage = () => {
             const selectedBillPayments = billPayments
                 .filter(bp => bp.selected && bp.amountApplied > 0)
                 .map(bp => ({
-                    billId: bp.billId,
-                    amountApplied: bp.amountApplied
+                    billId: parseInt(bp.billId),
+                    amountApplied: parseFloat(bp.amountApplied)
                 }));
 
             const response = await apiRequest(API_ENDPOINTS.payments, {
                 method: 'POST',
                 body: JSON.stringify({
-                    ...formData,
+                    supplierId: parseInt(formData.supplierId),
+                    paymentDate: formData.paymentDate,
                     amount: parseFloat(formData.amount),
+                    paymentMode: formData.paymentMode,
+                    referenceNumber: formData.referenceNumber || null,
+                    bankName: formData.bankName || null,
+                    chequeNumber: formData.chequeNumber || null,
+                    chequeDate: formData.chequeDate || null,
+                    notes: formData.notes || null,
                     billPayments: selectedBillPayments
                 })
             });
@@ -239,7 +247,7 @@ const NewPaymentPage = () => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg shadow-green-500/30">
-                                <FiDollarSign className="w-6 h-6 text-white" />
+                                <FaRupeeSign className="w-6 h-6 text-white" />
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">Record Payment</h1>
@@ -278,7 +286,7 @@ const NewPaymentPage = () => {
                     {/* Main Form */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Payment Details */}
-                        <SectionCard title="Payment Details" icon={FiDollarSign}>
+                        <SectionCard title="Payment Details" icon={FaRupeeSign}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <FormSelect
                                     label="Vendor *"
@@ -288,7 +296,7 @@ const NewPaymentPage = () => {
                                     error={errors.supplierId}
                                     options={[
                                         { value: '', label: 'Select Vendor' },
-                                        ...suppliers.map(s => ({ value: s.id, label: s.companyName }))
+                                        ...suppliers.map(s => ({ value: s.id, label: s.displayName || s.companyName || s.name || `Vendor ${s.id}` }))
                                     ]}
                                 />
                                 <FormInput
@@ -296,7 +304,7 @@ const NewPaymentPage = () => {
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    icon={FiDollarSign}
+                                    icon={FaRupeeSign}
                                     value={formData.amount}
                                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                                     error={errors.amount}
@@ -500,7 +508,7 @@ const NewPaymentPage = () => {
 
                             <div className="mt-6 p-4 bg-green-50 rounded-xl">
                                 <div className="flex items-center gap-2 text-green-700">
-                                    <FiDollarSign className="w-5 h-5" />
+                                    <FaRupeeSign className="w-5 h-5" />
                                     <span className="font-medium">Total Payment</span>
                                 </div>
                                 <div className="text-2xl font-bold text-green-700 mt-1">

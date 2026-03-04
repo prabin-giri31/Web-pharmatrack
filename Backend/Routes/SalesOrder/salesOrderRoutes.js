@@ -10,6 +10,8 @@ import {
 } from "../../Controller/SalesOrder/salesOrderController.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 import { authenticate } from "../../Middleware/auth.middleware.js";
+import { validate } from "../../Middleware/validation.middleware.js";
+import { salesOrderSchema } from "../../Validation/schemas.js";
 
 const router = express.Router();
 
@@ -26,7 +28,7 @@ router.get("/", asyncHandler(getSalesOrders));
 router.get("/:id", asyncHandler(getSalesOrderById));
 
 // POST /api/sales-orders -> create new sales order
-router.post("/", asyncHandler(createSalesOrder));
+router.post("/", validate(salesOrderSchema), asyncHandler(createSalesOrder));
 
 // PATCH /api/sales-orders/:id -> update sales order
 router.patch("/:id", asyncHandler(updateSalesOrder));

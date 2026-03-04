@@ -54,6 +54,14 @@ export const isAdmin = () => {
   return role !== "staff";
 };
 
+// Check if user is super admin
+export const isSuperAdmin = () => {
+  const user = getUser();
+  if (!user) return false;
+  const role = (user.role || user.userType || "").toLowerCase();
+  return role === "super_admin";
+};
+
 // Verify token with backend
 export const verifyToken = async () => {
   const token = getToken();

@@ -7,6 +7,7 @@ import { SalesOrder, SalesOrderItem } from "./SalesOrder/index.js";
 import { Invoice, InvoiceItem } from "./Invoice/index.js";
 import Notification from "./Notification/Notification.js";
 import Supplier from "./Supplier/Supplier.js";
+import { PurchaseOrder, PurchaseOrderItem } from "./PurchaseOrder/index.js";
 import { PurchaseReceive, PurchaseReceiveItem } from "./PurchaseReceive/index.js";
 import { Bill, BillItem } from "./Bill/index.js";
 import { Payment, PaymentItem } from "./Payment/index.js";
@@ -141,6 +142,37 @@ User.hasMany(Supplier, {
     as: "suppliers",
 });
 
+// PurchaseOrder relationships
+PurchaseOrder.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier",
+});
+
+Supplier.hasMany(PurchaseOrder, {
+    foreignKey: "supplierId",
+    as: "purchaseOrders",
+});
+
+PurchaseOrder.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+});
+
+User.hasMany(PurchaseOrder, {
+    foreignKey: "userId",
+    as: "purchaseOrders",
+});
+
+PurchaseOrderItem.belongsTo(Item, {
+    foreignKey: "itemId",
+    as: "item",
+});
+
+Item.hasMany(PurchaseOrderItem, {
+    foreignKey: "itemId",
+    as: "purchaseOrderItems",
+});
+
 // PurchaseReceive relationships
 PurchaseReceive.belongsTo(Supplier, {
     foreignKey: "supplierId",
@@ -170,6 +202,17 @@ PurchaseReceiveItem.belongsTo(Item, {
 Item.hasMany(PurchaseReceiveItem, {
     foreignKey: "itemId",
     as: "purchaseReceiveItems",
+});
+
+// PurchaseReceive belongs to PurchaseOrder
+PurchaseReceive.belongsTo(PurchaseOrder, {
+    foreignKey: "purchaseOrderId",
+    as: "purchaseOrder",
+});
+
+PurchaseOrder.hasMany(PurchaseReceive, {
+    foreignKey: "purchaseOrderId",
+    as: "purchaseReceives",
 });
 
 // Bill relationships
@@ -292,4 +335,4 @@ SystemSettings.belongsTo(User, {
     as: "updater",
 });
 
-export { User, Item, InventoryAdjustment, ItemsGroup, MedicineType, DiseaseCategory, Customer, SalesOrder, SalesOrderItem, Invoice, InvoiceItem, Notification, Supplier, PurchaseReceive, PurchaseReceiveItem, Bill, BillItem, Payment, PaymentItem, VendorCredit, VendorCreditItem, UserActivity, SystemSettings };
+export { User, Item, InventoryAdjustment, ItemsGroup, MedicineType, DiseaseCategory, Customer, SalesOrder, SalesOrderItem, Invoice, InvoiceItem, Notification, Supplier, PurchaseOrder, PurchaseOrderItem, PurchaseReceive, PurchaseReceiveItem, Bill, BillItem, Payment, PaymentItem, VendorCredit, VendorCreditItem, UserActivity, SystemSettings };

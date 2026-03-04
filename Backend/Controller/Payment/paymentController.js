@@ -38,7 +38,7 @@ export const getAllPayments = async (req, res) => {
                 {
                     model: Supplier,
                     as: 'supplier',
-                    attributes: ['id', 'companyName', 'contactPerson', 'email', 'phone']
+                    attributes: ['id', 'companyName', 'displayName', 'firstName', 'lastName', 'email', 'phone']
                 },
                 {
                     model: PaymentItem,
@@ -54,7 +54,9 @@ export const getAllPayments = async (req, res) => {
             ],
             order: [['createdAt', 'DESC']],
             limit: parseInt(limit),
-            offset: parseInt(offset)
+            offset: parseInt(offset),
+            subQuery: false,
+            distinct: true
         });
 
         res.json({
@@ -82,7 +84,7 @@ export const getPaymentById = async (req, res) => {
                 {
                     model: Supplier,
                     as: 'supplier',
-                    attributes: ['id', 'companyName', 'contactPerson', 'email', 'phone', 'address']
+                    attributes: ['id', 'companyName', 'displayName', 'firstName', 'lastName', 'email', 'phone']
                 },
                 {
                     model: PaymentItem,

@@ -120,6 +120,7 @@ export const createInvoice = async (req, res) => {
       paymentDate,
       status,
       notes,
+      advancePayment: advancePaymentPayload,
     } = req.body;
 
     const paymentError = validatePayment({ paymentStatus, paymentMode, paymentReference, paymentDate });
@@ -225,6 +226,10 @@ export const createInvoice = async (req, res) => {
     }
 
     const { subtotal, totalDiscount, totalTax, netPayable, lineItems } = buildTotals(itemsToInvoice);
+    const advancePaymentValue = salesOrder
+      ? parseFloat(salesOrder.advancePayment) || 0
+      : parseFloat(advancePaymentPayload) || 0;
+    const balanceDue = Math.max(0, netPayable - advancePaymentValue);
 
     const newInvoice = await Invoice.create({
       userId: req.user.userId,
@@ -237,6 +242,8 @@ export const createInvoice = async (req, res) => {
       discountAmount: totalDiscount,
       taxAmount: totalTax,
       netPayable,
+      advancePayment: advancePaymentValue,
+      balanceDue,
       paymentMode: paymentMode || null,
       paymentStatus: paymentStatus || "unpaid",
       paymentReference: paymentReference || null,

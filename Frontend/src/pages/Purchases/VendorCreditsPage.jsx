@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-    FiCreditCard, FiPlus, FiSearch, FiRefreshCw, FiDollarSign,
+    FiCreditCard, FiPlus, FiSearch, FiRefreshCw,
     FiCheck, FiClock, FiAlertCircle, FiMoreVertical, FiEye, 
     FiEdit2, FiTrash2, FiArrowRight, FiPackage, FiPercent
 } from 'react-icons/fi';
+import { FaRupeeSign } from 'react-icons/fa';
 import { API_ENDPOINTS, apiRequest } from '../../config/api';
 
 const VendorCreditsPage = () => {
@@ -184,7 +185,7 @@ const VendorCreditsPage = () => {
                     gradient="bg-gradient-to-br from-green-500 to-emerald-600"
                 />
                 <StatCard
-                    icon={FiDollarSign}
+                    icon={FaRupeeSign}
                     title="Balance Available"
                     value={formatCurrency(stats.balanceAmount)}
                     gradient="bg-gradient-to-br from-amber-500 to-orange-600"
@@ -274,10 +275,10 @@ const VendorCreditsPage = () => {
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center text-white font-semibold text-sm">
-                                                        {credit.supplier?.companyName?.charAt(0) || 'V'}
+                                                        {(credit.supplier?.displayName || credit.supplier?.companyName || credit.supplier?.firstName || 'V').charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <div className="font-medium text-gray-900">{credit.supplier?.companyName || 'Unknown'}</div>
+                                                        <div className="font-medium text-gray-900">{credit.supplier?.displayName || credit.supplier?.companyName || `${credit.supplier?.firstName || ''} ${credit.supplier?.lastName || ''}`.trim() || 'Unknown'}</div>
                                                         <div className="text-sm text-gray-500">{credit.supplier?.email}</div>
                                                     </div>
                                                 </div>
@@ -333,7 +334,7 @@ const VendorCreditsPage = () => {
                                     <div className="flex items-start justify-between mb-3">
                                         <div>
                                             <span className="font-semibold text-purple-600">{credit.creditNumber}</span>
-                                            <div className="text-sm text-gray-500 mt-1">{credit.supplier?.companyName}</div>
+                                            <div className="text-sm text-gray-500 mt-1">{credit.supplier?.displayName || credit.supplier?.companyName || `${credit.supplier?.firstName || ''} ${credit.supplier?.lastName || ''}`.trim() || 'Unknown'}</div>
                                         </div>
                                         {getStatusBadge(credit.status)}
                                     </div>

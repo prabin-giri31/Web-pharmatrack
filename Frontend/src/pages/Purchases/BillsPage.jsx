@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-    FiFileText, FiPlus, FiSearch, FiFilter, FiDollarSign, 
+    FiFileText, FiPlus, FiSearch, FiFilter, 
     FiClock, FiCheckCircle, FiAlertTriangle, FiMoreVertical,
     FiEdit2, FiTrash2, FiEye, FiCalendar, FiRefreshCw
 } from 'react-icons/fi';
+import { FaRupeeSign } from 'react-icons/fa';
 import { API_ENDPOINTS, apiRequest } from '../../config/api';
 
 const BillsPage = () => {
@@ -40,9 +41,15 @@ const BillsPage = () => {
             });
             
             const response = await apiRequest(`${API_ENDPOINTS.bills}?${params}`);
-            if (response.success) {
-                setBills(response.data.data || []);
-                setPagination(prev => ({ ...prev, total: response.data.pagination?.total || 0 }));
+            if (response.success && response.data) {
+                // Handle both direct array and nested data structure
+                const billsData = Array.isArray(response.data) 
+                    ? response.data 
+                    : (response.data.data || []);
+                console.log('Parsed bills:', billsData);
+                setBills(billsData);
+                const paginationData = response.data.pagination || response.pagination || {};
+                setPagination(prev => ({ ...prev, total: paginationData.total || 0 }));
             }
         } catch (error) {
             console.error('Error fetching bills:', error);
@@ -54,8 +61,10 @@ const BillsPage = () => {
     const fetchStats = async () => {
         try {
             const response = await apiRequest(`${API_ENDPOINTS.bills}/stats`);
-            if (response.success) {
-                setStats(response.data.data || stats);
+            if (response.success && response.data) {
+                // Handle both direct stats and nested data structure
+                const statsData = response.data.data || response.data;
+                setStats(statsData);
             }
         } catch (error) {
             console.error('Error fetching stats:', error);
@@ -83,7 +92,7 @@ const BillsPage = () => {
         const badges = {
             draft: { bg: 'bg-gray-100', text: 'text-gray-700', icon: FiFileText },
             open: { bg: 'bg-blue-100', text: 'text-blue-700', icon: FiClock },
-            partially_paid: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: FiDollarSign },
+            partially_paid: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: FaRupeeSign },
             paid: { bg: 'bg-green-100', text: 'text-green-700', icon: FiCheckCircle },
             overdue: { bg: 'bg-red-100', text: 'text-red-700', icon: FiAlertTriangle },
             cancelled: { bg: 'bg-gray-100', text: 'text-gray-500', icon: FiFileText }
@@ -194,9 +203,9 @@ const BillsPage = () => {
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-w-[140px]"
                         >
-                            <option value="">All Status</option>
+                            <option value="">All Bills</option>
                             <option value="draft">Draft</option>
                             <option value="open">Open</option>
                             <option value="partially_paid">Partially Paid</option>
@@ -261,10 +270,10 @@ const BillsPage = () => {
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
-                                                        {bill.supplier?.companyName?.charAt(0) || 'V'}
+                                                        {(bill.supplier?.displayName || bill.supplier?.companyName || bill.supplier?.firstName || 'V').charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <div className="font-medium text-gray-900">{bill.supplier?.companyName || 'Unknown'}</div>
+                                                        <div className="font-medium text-gray-900">{bill.supplier?.displayName || bill.supplier?.companyName || `${bill.supplier?.firstName || ''} ${bill.supplier?.lastName || ''}`.trim() || 'Unknown'}</div>
                                                         <div className="text-sm text-gray-500">{bill.supplier?.email}</div>
                                                     </div>
                                                 </div>
@@ -316,7 +325,7 @@ const BillsPage = () => {
                                     <div className="flex items-start justify-between mb-3">
                                         <div>
                                             <span className="font-semibold text-blue-600">{bill.billNumber}</span>
-                                            <div className="text-sm text-gray-500 mt-1">{bill.supplier?.companyName}</div>
+                                            <div className="text-sm text-gray-500 mt-1">{bill.supplier?.displayName || bill.supplier?.companyName || `${bill.supplier?.firstName || ''} ${bill.supplier?.lastName || ''}`.trim() || 'Unknown'}</div>
                                         </div>
                                         {getStatusBadge(bill.status)}
                                     </div>

@@ -7,6 +7,9 @@ import {
     getPaymentStats
 } from "../../Controller/Payment/paymentController.js";
 import { authenticate } from "../../Middleware/auth.middleware.js";
+import { validate } from "../../Middleware/validation.middleware.js";
+import { paymentSchema } from "../../Validation/schemas.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 
 const router = express.Router();
 
@@ -19,7 +22,7 @@ router.get("/stats", getPaymentStats);
 // CRUD routes
 router.get("/", getAllPayments);
 router.get("/:id", getPaymentById);
-router.post("/", createPayment);
+router.post("/", validate(paymentSchema), asyncHandler(createPayment));
 router.delete("/:id", deletePayment);
 
 export default router;

@@ -36,6 +36,7 @@ export const API_ENDPOINTS = {
   medicineTypes: `${API_BASE_URL}/api/medicine-types`,
   diseaseCategories: `${API_BASE_URL}/api/disease-categories`,
   itemsGroups: `${API_BASE_URL}/api/items-groups`,
+  purchaseOrders: `${API_BASE_URL}/api/purchase-orders`,
   purchaseReceives: `${API_BASE_URL}/api/purchase-receives`,
   bills: `${API_BASE_URL}/api/bills`,
   payments: `${API_BASE_URL}/api/payments`,

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   FiUsers,
   FiPackage,
-  FiDollarSign,
   FiTruck,
   FiAlertTriangle,
   FiUserCheck,
@@ -17,6 +16,7 @@ import {
   FiDatabase,
   FiBarChart2,
 } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import { API_ENDPOINTS, apiRequest } from "../../config/api";
 import { formatCurrency, formatDate, formatDateTime } from "../../utils/formatters";
 
@@ -79,7 +79,7 @@ const SuperAdminDashboard = () => {
     { label: "Active Users", value: stats.activeUsers || 0, icon: FiUserCheck, color: "green" },
     { label: "Locked Users", value: stats.lockedUsers || 0, icon: FiLock, color: "red", link: "/super-admin/users?status=locked" },
     { label: "Total Medicines", value: stats.totalItems || 0, icon: FiPackage, color: "purple" },
-    { label: "Total Sales", value: formatCurrency(stats.totalSales || 0), icon: FiDollarSign, color: "emerald" },
+    { label: "Total Sales", value: formatCurrency(stats.totalSales || 0), icon: FaRupeeSign, color: "emerald" },
     { label: "Total Customers", value: stats.totalCustomers || 0, icon: FiUsers, color: "indigo" },
     { label: "Total Suppliers", value: stats.totalSuppliers || 0, icon: FiTruck, color: "orange" },
   ];

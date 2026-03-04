@@ -14,9 +14,9 @@ import {
   FiPhone,
   FiMail as FiMailIcon,
   FiPackage,
-  FiDollarSign,
   FiTruck,
 } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 
 const SalesOrderDetailsModal = ({
   isOpen,

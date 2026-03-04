@@ -7,8 +7,9 @@ import {
   deleteInventoryAdjustment,
 } from "../../Controller/Inventory/inventoryController.js";
 import asyncHandler from "../../utils/asyncHandler.js";
-
 import { authenticate } from "../../Middleware/auth.middleware.js";
+import { validate } from "../../Middleware/validation.middleware.js";
+import { inventoryAdjustmentSchema } from "../../Validation/schemas.js";
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.use(authenticate);
 router.get("/adjustments", asyncHandler(getInventoryAdjustments));
 
 // POST /api/inventory/adjustments -> add new adjustment
-router.post("/adjustments", asyncHandler(addInventoryAdjustment));
+router.post("/adjustments", validate(inventoryAdjustmentSchema), asyncHandler(addInventoryAdjustment));
 
 // PUT /api/inventory/adjustments/:id -> update adjustment
 router.put("/adjustments/:id", asyncHandler(updateInventoryAdjustment));

@@ -8,8 +8,9 @@ import {
   getCustomerStats,
 } from "../../Controller/Customer/customerController.js";
 import asyncHandler from "../../utils/asyncHandler.js";
-
 import { authenticate } from "../../Middleware/auth.middleware.js";
+import { validate } from "../../Middleware/validation.middleware.js";
+import { customerSchema } from "../../Validation/schemas.js";
 
 const router = express.Router();
 
@@ -26,10 +27,10 @@ router.get("/", asyncHandler(getCustomers));
 router.get("/:id", asyncHandler(getCustomerById));
 
 // POST /api/customers -> create new customer
-router.post("/", asyncHandler(createCustomer));
+router.post("/", validate(customerSchema), asyncHandler(createCustomer));
 
 // PATCH /api/customers/:id -> update customer
-router.patch("/:id", asyncHandler(updateCustomer));
+router.patch("/:id", validate(customerSchema), asyncHandler(updateCustomer));
 
 // DELETE /api/customers/:id -> delete customer
 router.delete("/:id", asyncHandler(deleteCustomer));

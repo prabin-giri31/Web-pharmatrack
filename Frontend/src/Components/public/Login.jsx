@@ -94,8 +94,8 @@ const Login = () => {
       <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-sm">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
-            <img src={logo} alt="Logo" className="w-16 h-16 object-contain" />
+          <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center shadow-md">
+            <img src={logo} alt="Logo" className="w-14 h-14 object-contain brightness-0 invert" />
           </div>
         </div>
 

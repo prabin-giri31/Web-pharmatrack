@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   FiDatabase,
   FiDownload,
@@ -17,6 +18,7 @@ import { API_ENDPOINTS, apiRequest } from "../../config/api";
 import { formatCurrency, formatDate } from "../../utils/formatters";
 
 const DataManagement = () => {
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [exportData, setExportData] = useState(null);
   const [backupInfo, setBackupInfo] = useState(null);
@@ -27,6 +29,15 @@ const DataManagement = () => {
   const [exportType, setExportType] = useState("all");
   const [reportStartDate, setReportStartDate] = useState("");
   const [reportEndDate, setReportEndDate] = useState("");
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.slice(1);
+    const target = document.getElementById(id);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [location.hash]);
 
   const handleExport = useCallback(async () => {
     try {
@@ -138,7 +149,7 @@ const DataManagement = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Export Data */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div id="export" className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
               <h2 className="font-semibold text-gray-900 flex items-center gap-2">
                 <FiDownload className="w-4 h-4" />
@@ -182,7 +193,7 @@ const DataManagement = () => {
           </div>
 
           {/* Backup */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div id="backup" className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
               <h2 className="font-semibold text-gray-900 flex items-center gap-2">
                 <FiUpload className="w-4 h-4" />
@@ -237,7 +248,7 @@ const DataManagement = () => {
         </div>
 
         {/* Reports */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div id="report" className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
               <FiBarChart2 className="w-4 h-4" />

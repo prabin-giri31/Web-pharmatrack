@@ -13,6 +13,9 @@ const NewInvoicePage = () => {
   const [productSearch, setProductSearch] = useState("");
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [showProductDropdown, setShowProductDropdown] = useState(false);
+  const [customerSalesOrders, setCustomerSalesOrders] = useState([]);
+  const [selectedSalesOrder, setSelectedSalesOrder] = useState(null);
+  const [isSalesOrdersLoading, setIsSalesOrdersLoading] = useState(false);
   const [invoiceCount, setInvoiceCount] = useState(0);
 
   const [formData, setFormData] = useState({
@@ -33,6 +36,8 @@ const NewInvoicePage = () => {
     shippingCharges: 0,
     adjustment: 0,
     items: [],
+    salesOrderId: "",
+    advancePayment: 0,
   });
 
   // Format currency in Rs.
@@ -75,12 +80,20 @@ const NewInvoicePage = () => {
     }
   };
 
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-      c.company?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-      c.email?.toLowerCase().includes(customerSearch.toLowerCase())
-  );
+  const filteredCustomers = customers.filter((c) => {
+    const searchTerm = customerSearch.trim().toLowerCase();
+    if (!searchTerm) return true;
+
+    const name = (c.name || c.displayName || "").toLowerCase();
+    const company = (c.company || "").toLowerCase();
+    const email = (c.email || "").toLowerCase();
+
+    return (
+      name.includes(searchTerm) ||
+      company.includes(searchTerm) ||
+      email.includes(searchTerm)
+    );
+  });
 
   const filteredProducts = products.filter(
     (p) =>
@@ -89,13 +102,66 @@ const NewInvoicePage = () => {
   );
 
   const selectCustomer = (customer) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       customerId: customer.id,
       customerName: customer.name,
-    });
+      salesOrderId: "",
+      advancePayment: 0,
+    }));
+    setSelectedSalesOrder(null);
     setCustomerSearch("");
     setShowCustomerDropdown(false);
+    fetchSalesOrdersForCustomer(customer.id);
+  };
+
+  const fetchSalesOrdersForCustomer = async (customerId) => {
+    if (!customerId) {
+      setCustomerSalesOrders([]);
+      return;
+    }
+    setIsSalesOrdersLoading(true);
+    try {
+      const result = await apiRequest(`${API_ENDPOINTS.salesOrders}?customerId=${customerId}`);
+      if (result.success) {
+        setCustomerSalesOrders(result.data || []);
+      } else {
+        setCustomerSalesOrders([]);
+      }
+    } catch (err) {
+      setCustomerSalesOrders([]);
+    } finally {
+      setIsSalesOrdersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!formData.customerId) {
+      setCustomerSalesOrders([]);
+      setSelectedSalesOrder(null);
+    }
+  }, [formData.customerId]);
+
+  const applySalesOrder = (order) => {
+    const mappedItems = (order.items || []).map((item) => ({
+      productId: item.productId,
+      productName: item.productName,
+      productSku: item.productSku,
+      quantity: item.quantity,
+      unitPrice: parseFloat(item.unitPrice) || 0,
+      discount: parseFloat(item.discount) || 0,
+      tax: parseFloat(item.tax) || 0,
+      stockOnHand: products.find((p) => p.id === item.productId)?.stockOnHand || 0,
+    }));
+    setFormData((prev) => ({
+      ...prev,
+      items: mappedItems,
+      salesOrderId: order.id,
+      orderNumber: order.orderNumber,
+      terms: order.paymentTerms || prev.terms,
+      advancePayment: parseFloat(order.advancePayment) || 0,
+    }));
+    setSelectedSalesOrder(order);
   };
 
   const addProduct = (product) => {
@@ -115,9 +181,9 @@ const NewInvoicePage = () => {
             productName: product.name,
             productSku: product.sku || "",
             quantity: 1,
-            unitPrice: product.salePrice || product.price || 0,
+            unitPrice: parseFloat(product.sellingPrice) || 0,
             discount: 0,
-            tax: product.taxRate || 0,
+            tax: product.taxRate || 13,
             stockOnHand: product.stockOnHand || 0,
           },
         ],
@@ -164,6 +230,8 @@ const NewInvoicePage = () => {
     const shipping = parseFloat(formData.shippingCharges) || 0;
     const adjustment = parseFloat(formData.adjustment) || 0;
     const total = subtotal - discountAmount + totalTax + shipping + adjustment;
+    const advance = parseFloat(formData.advancePayment) || 0;
+    const balanceDue = Math.max(0, total - advance);
 
     return {
       subtotal,
@@ -172,8 +240,10 @@ const NewInvoicePage = () => {
       shipping,
       adjustment,
       total,
+      advancePayment: advance,
+      balanceDue,
     };
-  }, [formData.items, formData.discountPercent, formData.shippingCharges, formData.adjustment]);
+  }, [formData.items, formData.discountPercent, formData.shippingCharges, formData.adjustment, formData.advancePayment]);
 
   const totals = calculateTotals();
 
@@ -234,6 +304,8 @@ const NewInvoicePage = () => {
       adjustment: formData.adjustment,
       notes: formData.customerNotes,
       status: "finalized",
+      advancePayment: formData.advancePayment || 0,
+      salesOrderId: formData.salesOrderId || null,
       items: formData.items.map((item) => ({
         productId: item.productId,
         productName: item.productName,
@@ -332,7 +404,14 @@ const NewInvoicePage = () => {
                         <span className="font-medium text-blue-900">{formData.customerName}</span>
                         <button
                           type="button"
-                          onClick={() => setFormData({ ...formData, customerId: "", customerName: "" })}
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              customerId: "",
+                              customerName: "",
+                              salesOrderId: "",
+                            }))
+                          }
                           className="text-blue-600 hover:text-blue-800"
                         >
                           <FiTrash2 className="w-4 h-4" />
@@ -360,7 +439,10 @@ const NewInvoicePage = () => {
                                 <button
                                   key={customer.id}
                                   type="button"
-                                  onClick={() => selectCustomer(customer)}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    selectCustomer(customer);
+                                  }}
                                   className="w-full px-4 py-2.5 text-left hover:bg-gray-50 border-b border-gray-100 last:border-0"
                                 >
                                   <p className="font-medium text-gray-900">{customer.name}</p>
@@ -378,7 +460,7 @@ const NewInvoicePage = () => {
                 </div>
 
                 {/* Right - Invoice Details Grid */}
-                <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Invoice#</label>
                     <input
@@ -444,6 +526,40 @@ const NewInvoicePage = () => {
                 </div>
               </div>
 
+              {(customerSalesOrders.length > 0 || isSalesOrdersLoading) && (
+                <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900">Customer Sales Orders</p>
+                      <p className="text-xs text-blue-800">Load items from an existing sales order</p>
+                    </div>
+                    {selectedSalesOrder && (
+                      <div className="text-xs text-blue-700">Loaded: {selectedSalesOrder.orderNumber}</div>
+                    )}
+                  </div>
+                  {isSalesOrdersLoading ? (
+                    <div className="text-sm text-blue-900">Loading orders...</div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {customerSalesOrders.map((order) => (
+                        <button
+                          key={order.id}
+                          type="button"
+                          onClick={() => applySalesOrder(order)}
+                          className={`w-full text-left px-3 py-2 rounded-lg border ${
+                            selectedSalesOrder?.id === order.id ? "border-blue-700 bg-blue-100" : "border-blue-200 bg-white"
+                          }`}
+                        >
+                          <p className="text-sm font-semibold text-blue-900">{order.orderNumber}</p>
+                          <p className="text-xs text-blue-700">Items: {order.items?.length || 0}</p>
+                          <p className="text-xs text-blue-700">Status: {order.status || "Draft"}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Subject */}
               <div className="mt-6">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
@@ -492,7 +608,7 @@ const NewInvoicePage = () => {
                               <p className="text-sm text-gray-500">SKU: {product.sku || "-"}</p>
                             </div>
                             <div className="text-right">
-                              <p className="font-semibold text-green-600">Rs. {formatCurrency(product.salePrice || product.price)}</p>
+                              <p className="font-semibold text-green-600">{formatCurrency(product.sellingPrice)}</p>
                               <p className="text-xs text-gray-500">Stock: {product.stockOnHand || 0}</p>
                             </div>
                           </div>
@@ -516,7 +632,6 @@ const NewInvoicePage = () => {
                       <th className="text-right px-4 py-3 text-xs font-semibold text-gray-600 uppercase w-32">Rate</th>
                       <th className="text-center px-4 py-3 text-xs font-semibold text-gray-600 uppercase w-24">Tax</th>
                       <th className="text-right px-4 py-3 text-xs font-semibold text-gray-600 uppercase w-36">Amount</th>
-                      <th className="w-12"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -634,6 +749,11 @@ const NewInvoicePage = () => {
                   </div>
 
                   <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Tax</span>
+                    <span className="font-semibold text-lg">{formatCurrency(totals.totalTax)}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">Shipping Charges</span>
                     <input
                       type="number"
@@ -656,9 +776,14 @@ const NewInvoicePage = () => {
                     />
                   </div>
 
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Advance Paid</span>
+                    <span className="font-semibold text-lg text-green-600">-{formatCurrency(totals.advancePayment)}</span>
+                  </div>
+
                   <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
-                    <span className="font-bold text-gray-900 text-lg">Total ( Rs. )</span>
-                    <span className="font-bold text-2xl text-blue-600">{formatCurrency(totals.total)}</span>
+                    <span className="font-bold text-gray-900 text-lg">Balance Due</span>
+                    <span className="font-bold text-2xl text-blue-600">{formatCurrency(totals.balanceDue)}</span>
                   </div>
                 </div>
               </div>

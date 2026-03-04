@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     FiCreditCard, FiSave, FiX, FiPlus, FiTrash2, FiSearch,
-    FiCalendar, FiUser, FiPackage, FiDollarSign, FiChevronDown, FiFileText
+    FiCalendar, FiUser, FiPackage, FiChevronDown, FiFileText
 } from 'react-icons/fi';
+import { FaRupeeSign } from 'react-icons/fa';
 import { API_ENDPOINTS, apiRequest } from '../../config/api';
 
 // Reusable Components
@@ -139,7 +140,9 @@ const NewVendorCreditPage = () => {
                 sku: item.sku,
                 description: item.name,
                 quantity: 1,
-                unitPrice: item.costPrice || 0,
+                rate: item.costPrice || 0,
+                discount: 0,
+                discountType: 'fixed',
                 tax: 0
             }]);
         }
@@ -158,7 +161,7 @@ const NewVendorCreditPage = () => {
     };
 
     const calculateItemTotal = (item) => {
-        const subtotal = item.quantity * item.unitPrice;
+        const subtotal = item.quantity * item.rate;
         const taxAmount = subtotal * (item.tax / 100);
         return subtotal + taxAmount;
     };
@@ -168,7 +171,7 @@ const NewVendorCreditPage = () => {
         let totalTax = 0;
 
         creditItems.forEach(item => {
-            const itemSubtotal = item.quantity * item.unitPrice;
+            const itemSubtotal = item.quantity * item.rate;
             const taxAmount = itemSubtotal * (item.tax / 100);
 
             subtotal += itemSubtotal;
@@ -201,9 +204,19 @@ const NewVendorCreditPage = () => {
             const response = await apiRequest(API_ENDPOINTS.vendorCredits, {
                 method: 'POST',
                 body: JSON.stringify({
-                    ...formData,
-                    billId: formData.billId || null,
-                    items: creditItems
+                    supplierId: parseInt(formData.supplierId),
+                    billId: formData.billId ? parseInt(formData.billId) : null,
+                    creditDate: formData.creditDate,
+                    reason: formData.reason || null,
+                    notes: formData.notes || null,
+                    items: creditItems.map(item => ({
+                        itemId: parseInt(item.itemId),
+                        quantity: parseInt(item.quantity) || 1,
+                        rate: parseFloat(item.rate) || 0,
+                        discount: parseFloat(item.discount) || 0,
+                        discountType: item.discountType || 'fixed',
+                        tax: parseFloat(item.tax) || 0
+                    }))
                 })
             });
 
@@ -282,7 +295,7 @@ const NewVendorCreditPage = () => {
                                     error={errors.supplierId}
                                     options={[
                                         { value: '', label: 'Select Vendor' },
-                                        ...suppliers.map(s => ({ value: s.id, label: s.companyName }))
+                                        ...suppliers.map(s => ({ value: s.id, label: s.displayName || s.companyName || s.name || `Vendor ${s.id}` }))
                                     ]}
                                 />
                                 <FormSelect
@@ -390,8 +403,8 @@ const NewVendorCreditPage = () => {
                                                             type="number"
                                                             min="0"
                                                             step="0.01"
-                                                            value={item.unitPrice}
-                                                            onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                                                            value={item.rate}
+                                                            onChange={(e) => handleItemChange(index, 'rate', parseFloat(e.target.value) || 0)}
                                                             className="w-24 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-right focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                                                         />
                                                     </td>

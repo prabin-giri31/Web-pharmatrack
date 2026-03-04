@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import { sequelize } from "./Database/db.js";
-import { authRoutes, itemRoutes, inventoryRoutes, customerRoutes, salesOrderRoutes, medicineTypeRoutes, diseaseCategoryRoutes, itemsGroupRoutes, searchRoutes, notificationRoutes, supplierRoutes, dashboardRoutes, invoiceRoutes, purchaseReceiveRoutes, billRoutes, paymentRoutes, vendorCreditRoutes, superAdminRoutes } from "./Routes/index.js";
+import { authRoutes, itemRoutes, inventoryRoutes, customerRoutes, salesOrderRoutes, medicineTypeRoutes, diseaseCategoryRoutes, itemsGroupRoutes, searchRoutes, notificationRoutes, supplierRoutes, dashboardRoutes, invoiceRoutes, purchaseOrderRoutes, purchaseReceiveRoutes, billRoutes, paymentRoutes, vendorCreditRoutes, superAdminRoutes } from "./Routes/index.js";
 import { User } from "./Model/index.js"; // Import models and associations
 import seedAll from "./Database/seeders/seedItemsGroup.js";
 
@@ -30,6 +30,7 @@ app.use("/api/search", searchRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/purchase-receives", purchaseReceiveRoutes);
 app.use("/api/bills", billRoutes);
 app.use("/api/payments", paymentRoutes);

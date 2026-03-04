@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { FiFileText, FiPlus, FiTrash2, FiUpload, FiUser, FiMapPin, FiUsers, FiBriefcase, FiDollarSign, FiTag, FiMessageSquare, FiChevronLeft, FiStar, FiCheck, FiAlertCircle } from "react-icons/fi";
+import { FiFileText, FiPlus, FiTrash2, FiUpload, FiUser, FiMapPin, FiUsers, FiBriefcase, FiTag, FiMessageSquare, FiChevronLeft, FiStar, FiCheck, FiAlertCircle } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS, apiRequest } from "../../config/api";
 
@@ -610,7 +611,7 @@ const NewVendorPage = () => {
 
           {/* Financial Information */}
           <SectionCard
-            icon={FiDollarSign}
+            icon={FaRupeeSign}
             title="Financial Information"
             description="Payment and banking details"
           >

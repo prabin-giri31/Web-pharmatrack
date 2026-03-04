@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaRupeeSign } from 'react-icons/fa';
 import { API_ENDPOINTS, apiRequest } from "../../config/api";
 import {
   FiPlus,
@@ -7,7 +8,6 @@ import {
   FiPackage,
   FiTruck,
   FiCalendar,
-  FiDollarSign,
   FiFilter,
   FiChevronRight,
   FiCheckCircle,
@@ -184,7 +184,7 @@ const PurchaseReceivesPage = () => {
                 <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(stats.totalValue)}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-xl">
-                <FiDollarSign className="w-6 h-6 text-purple-600" />
+                <FaRupeeSign className="w-6 h-6 text-purple-600" />
               </div>
             </div>
           </div>

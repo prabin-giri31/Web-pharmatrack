@@ -6,12 +6,12 @@ import {
   FiLoader,
   FiAlertTriangle,
   FiCheck,
-  FiDollarSign,
   FiShield,
   FiDatabase,
   FiPackage,
   FiFileText,
 } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import { API_ENDPOINTS, apiRequest } from "../../config/api";
 
 const SystemSettings = () => {
@@ -25,7 +25,7 @@ const SystemSettings = () => {
   const categoryIcons = {
     general: FiSettings,
     invoice: FiFileText,
-    sales: FiDollarSign,
+    sales: FaRupeeSign,
     inventory: FiPackage,
     security: FiShield,
     data: FiDatabase,

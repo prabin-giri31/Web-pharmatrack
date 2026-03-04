@@ -69,6 +69,16 @@ const Invoice = sequelize.define("Invoice", {
     defaultValue: 0,
     allowNull: false,
   },
+  advancePayment: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+    allowNull: false,
+  },
+  balanceDue: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+    allowNull: false,
+  },
   paymentMode: {
     type: DataTypes.ENUM("cash", "card", "online"),
     allowNull: true,

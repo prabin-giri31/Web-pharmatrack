@@ -9,7 +9,6 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -17,7 +16,6 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
     setIsNetworkError(false);
     setFieldErrors({});
 
@@ -43,8 +41,10 @@ const ForgotPassword = () => {
     });
 
     if (result.success) {
-      setSuccess("Password reset link has been sent to your email.");
-      setEmail("");
+      // Navigate to code verification page
+      navigate("/verify-reset-code", { 
+        state: { email } 
+      });
     } else {
       setError(result.error);
       setIsNetworkError(result.isNetworkError);
@@ -77,12 +77,6 @@ const ForgotPassword = () => {
               : "bg-red-100 border border-red-400 text-red-700"
           }`}>
             {isNetworkError && "⚠️ "}{error}
-          </div>
-        )}
-
-        {success && (
-          <div className="px-4 py-2 rounded mb-4 text-sm bg-green-100 border border-green-400 text-green-700">
-            ✓ {success}
           </div>
         )}
 

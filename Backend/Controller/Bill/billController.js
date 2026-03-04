@@ -37,7 +37,7 @@ export const getAllBills = async (req, res) => {
                 {
                     model: Supplier,
                     as: 'supplier',
-                    attributes: ['id', 'companyName', 'contactPerson', 'email', 'phone']
+                    attributes: ['id', 'companyName', 'displayName', 'firstName', 'lastName', 'email', 'phone']
                 },
                 {
                     model: BillItem,
@@ -53,7 +53,9 @@ export const getAllBills = async (req, res) => {
             ],
             order: [['createdAt', 'DESC']],
             limit: parseInt(limit),
-            offset: parseInt(offset)
+            offset: parseInt(offset),
+            subQuery: false,
+            distinct: true
         });
 
         res.json({
@@ -81,7 +83,7 @@ export const getBillById = async (req, res) => {
                 {
                     model: Supplier,
                     as: 'supplier',
-                    attributes: ['id', 'companyName', 'contactPerson', 'email', 'phone', 'address']
+                    attributes: ['id', 'companyName', 'displayName', 'firstName', 'lastName', 'email', 'phone']
                 },
                 {
                     model: BillItem,
@@ -140,11 +142,11 @@ export const createBill = async (req, res) => {
         let totalTax = 0;
 
         items.forEach(item => {
-            const itemTotal = item.quantity * item.unitPrice;
+            const itemTotal = item.quantity * item.rate;
             const discount = item.discountType === 'percentage' 
-                ? (itemTotal * item.discount / 100) 
-                : item.discount;
-            const taxAmount = (itemTotal - discount) * (item.tax / 100);
+                ? (itemTotal * (item.discount || 0) / 100) 
+                : (item.discount || 0);
+            const taxAmount = (itemTotal - discount) * ((item.tax || 0) / 100);
             
             subtotal += itemTotal;
             totalDiscount += discount;
@@ -173,7 +175,7 @@ export const createBill = async (req, res) => {
 
         // Create bill items
         const billItems = items.map(item => {
-            const itemTotal = item.quantity * item.unitPrice;
+            const itemTotal = item.quantity * item.rate;
             const discount = item.discountType === 'percentage' 
                 ? (itemTotal * item.discount / 100) 
                 : item.discount;
@@ -185,9 +187,9 @@ export const createBill = async (req, res) => {
                 itemId: item.itemId,
                 description: item.description,
                 quantity: item.quantity,
-                unitPrice: item.unitPrice,
+                unitPrice: item.rate,
                 discount: item.discount,
-                discountType: item.discountType || 'amount',
+                discountType: item.discountType || 'fixed',
                 tax: item.tax,
                 total
             };
@@ -249,7 +251,7 @@ export const updateBill = async (req, res) => {
         let totalTax = 0;
 
         items.forEach(item => {
-            const itemTotal = item.quantity * item.unitPrice;
+            const itemTotal = item.quantity * item.rate;
             const discount = item.discountType === 'percentage' 
                 ? (itemTotal * item.discount / 100) 
                 : item.discount;
@@ -282,7 +284,7 @@ export const updateBill = async (req, res) => {
         await BillItem.destroy({ where: { billId: bill.id }, transaction });
 
         const billItems = items.map(item => {
-            const itemTotal = item.quantity * item.unitPrice;
+            const itemTotal = item.quantity * item.rate;
             const discount = item.discountType === 'percentage' 
                 ? (itemTotal * item.discount / 100) 
                 : item.discount;
@@ -294,9 +296,9 @@ export const updateBill = async (req, res) => {
                 itemId: item.itemId,
                 description: item.description,
                 quantity: item.quantity,
-                unitPrice: item.unitPrice,
+                unitPrice: item.rate,
                 discount: item.discount,
-                discountType: item.discountType || 'amount',
+                discountType: item.discountType || 'fixed',
                 tax: item.tax,
                 total
             };

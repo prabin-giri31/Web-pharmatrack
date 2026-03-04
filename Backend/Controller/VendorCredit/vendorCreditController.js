@@ -38,7 +38,7 @@ export const getAllVendorCredits = async (req, res) => {
                 {
                     model: Supplier,
                     as: 'supplier',
-                    attributes: ['id', 'companyName', 'contactPerson', 'email', 'phone']
+                    attributes: ['id', 'companyName', 'displayName', 'firstName', 'lastName', 'email', 'phone']
                 },
                 {
                     model: Bill,
@@ -59,7 +59,9 @@ export const getAllVendorCredits = async (req, res) => {
             ],
             order: [['createdAt', 'DESC']],
             limit: parseInt(limit),
-            offset: parseInt(offset)
+            offset: parseInt(offset),
+            subQuery: false,
+            distinct: true
         });
 
         res.json({
@@ -87,7 +89,7 @@ export const getVendorCreditById = async (req, res) => {
                 {
                     model: Supplier,
                     as: 'supplier',
-                    attributes: ['id', 'companyName', 'contactPerson', 'email', 'phone', 'address']
+                    attributes: ['id', 'companyName', 'displayName', 'firstName', 'lastName', 'email', 'phone']
                 },
                 {
                     model: Bill,
@@ -151,10 +153,14 @@ export const createVendorCredit = async (req, res) => {
         let totalTax = 0;
 
         items.forEach(item => {
-            const itemTotal = item.quantity * item.unitPrice;
-            const taxAmount = itemTotal * (item.tax / 100);
+            const itemTotal = item.quantity * item.rate;
+            const discount = item.discountType === 'percentage' 
+                ? (itemTotal * (item.discount || 0) / 100) 
+                : (item.discount || 0);
+            const afterDiscount = itemTotal - discount;
+            const taxAmount = afterDiscount * ((item.tax || 0) / 100);
             
-            subtotal += itemTotal;
+            subtotal += afterDiscount;
             totalTax += taxAmount;
         });
 
@@ -180,22 +186,37 @@ export const createVendorCredit = async (req, res) => {
 
         // Create credit items
         const creditItems = items.map(item => {
-            const itemTotal = item.quantity * item.unitPrice;
-            const taxAmount = itemTotal * (item.tax / 100);
-            const total = itemTotal + taxAmount;
+            const itemTotal = item.quantity * item.rate;
+            const discount = item.discountType === 'percentage' 
+                ? (itemTotal * (item.discount || 0) / 100) 
+                : (item.discount || 0);
+            const afterDiscount = itemTotal - discount;
+            const taxAmount = afterDiscount * ((item.tax || 0) / 100);
+            const total = afterDiscount + taxAmount;
 
             return {
                 vendorCreditId: vendorCredit.id,
                 itemId: item.itemId,
                 description: item.description,
                 quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                tax: item.tax,
+                unitPrice: item.rate,
+                discount: item.discount || 0,
+                discountType: item.discountType || 'fixed',
+                tax: item.tax || 0,
                 total
             };
         });
 
         await VendorCreditItem.bulkCreate(creditItems, { transaction });
+
+        // Decrease stock for each item (vendor credit means returning items to supplier)
+        for (const item of items) {
+            await Item.decrement('stockOnHand', {
+                by: item.quantity,
+                where: { id: item.itemId },
+                transaction
+            });
+        }
 
         await transaction.commit();
 
@@ -252,10 +273,14 @@ export const updateVendorCredit = async (req, res) => {
         let totalTax = 0;
 
         items.forEach(item => {
-            const itemTotal = item.quantity * item.unitPrice;
-            const taxAmount = itemTotal * (item.tax / 100);
+            const itemTotal = item.quantity * item.rate;
+            const discount = item.discountType === 'percentage' 
+                ? (itemTotal * (item.discount || 0) / 100) 
+                : (item.discount || 0);
+            const afterDiscount = itemTotal - discount;
+            const taxAmount = afterDiscount * ((item.tax || 0) / 100);
             
-            subtotal += itemTotal;
+            subtotal += afterDiscount;
             totalTax += taxAmount;
         });
 
@@ -280,17 +305,23 @@ export const updateVendorCredit = async (req, res) => {
         await VendorCreditItem.destroy({ where: { vendorCreditId: vendorCredit.id }, transaction });
 
         const creditItems = items.map(item => {
-            const itemTotal = item.quantity * item.unitPrice;
-            const taxAmount = itemTotal * (item.tax / 100);
-            const total = itemTotal + taxAmount;
+            const itemTotal = item.quantity * item.rate;
+            const discount = item.discountType === 'percentage' 
+                ? (itemTotal * (item.discount || 0) / 100) 
+                : (item.discount || 0);
+            const afterDiscount = itemTotal - discount;
+            const taxAmount = afterDiscount * ((item.tax || 0) / 100);
+            const total = afterDiscount + taxAmount;
 
             return {
                 vendorCreditId: vendorCredit.id,
                 itemId: item.itemId,
                 description: item.description,
                 quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                tax: item.tax,
+                unitPrice: item.rate,
+                discount: item.discount || 0,
+                discountType: item.discountType || 'fixed',
+                tax: item.tax || 0,
                 total
             };
         });

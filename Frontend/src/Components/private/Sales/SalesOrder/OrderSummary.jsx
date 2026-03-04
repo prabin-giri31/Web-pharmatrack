@@ -1,5 +1,5 @@
 import React from "react";
-import { FiDollarSign } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 
 const OrderSummary = ({
   subtotal,
@@ -22,7 +22,7 @@ const OrderSummary = ({
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
       <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-        <FiDollarSign className="w-4 h-4" />
+        <FaRupeeSign className="w-4 h-4" />
         Order Summary
       </h3>
 

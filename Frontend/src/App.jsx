@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Components
-import { PrivateRoute, PublicRoute, SuperAdminRoute } from "./Components/routes";
+import { PrivateRoute, PublicRoute, SuperAdminRoute, RegularUserRoute, RoleBasedRedirect } from "./Components/routes";
 import PrivateLayout from "./Components/layout/PrivateLayout";
 import SuperAdminLayout from "./Components/layout/SuperAdminLayout";
 import Login from "./Components/public/Login";
 import Register from "./Components/public/Register";
 import ForgotPassword from "./Components/public/ForgotPassword";
+import VerifyResetCode from "./Components/public/VerifyResetCode";
+import ResetPassword from "./Components/public/ResetPassword";
 
 // Pages
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -23,10 +25,14 @@ import InvoiceDetailsPage from "./Components/private/invoice/InvoiceDetailsPage"
 import NewInvoicePage from "./Components/private/invoice/NewInvoicePage";
 import SuppliersPage from "./pages/Purchases/SuppliersPage";
 import NewVendorPage from "./pages/Purchases/NewVendorPage";
+import PurchaseOrdersPage from "./pages/Purchases/PurchaseOrdersPage";
+import NewPurchaseOrderPage from "./pages/Purchases/NewPurchaseOrderPage";
 import PurchaseReceivesPage from "./pages/Purchases/PurchaseReceivesPage";
 import NewPurchaseReceivePage from "./pages/Purchases/NewPurchaseReceivePage";
 import BillsPage from "./pages/Purchases/BillsPage";
 import NewBillPage from "./pages/Purchases/NewBillPage";
+import ViewBillPage from "./pages/Purchases/ViewBillPage";
+import EditBillPage from "./pages/Purchases/EditBillPage";
 import PaymentsPage from "./pages/Purchases/PaymentsPage";
 import NewPaymentPage from "./pages/Purchases/NewPaymentPage";
 import VendorCreditsPage from "./pages/Purchases/VendorCreditsPage";
@@ -80,17 +86,29 @@ const App = () => {
             <ForgotPassword />
           </PublicRoute>
         } />
+        <Route path="/verify-reset-code" element={
+          <PublicRoute authChecked={authChecked} isValid={isValid}>
+            <VerifyResetCode />
+          </PublicRoute>
+        } />
+        <Route path="/reset-password" element={
+          <PublicRoute authChecked={authChecked} isValid={isValid}>
+            <ResetPassword />
+          </PublicRoute>
+        } />
 
-        {/* DEFAULT ROUTE */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* DEFAULT ROUTE - Redirect based on user role */}
+        <Route path="/" element={<RoleBasedRedirect />} />
         
-        {/* CATCH ALL - redirect unknown routes to dashboard */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* CATCH ALL - redirect unknown routes based on user role */}
+        <Route path="*" element={<RoleBasedRedirect />} />
 
-        {/* PRIVATE ROUTES */}
+        {/* PRIVATE ROUTES - Regular users only (Super Admin redirected to /super-admin) */}
         <Route element={
           <PrivateRoute authChecked={authChecked} isValid={isValid}>
-            <PrivateLayout />
+            <RegularUserRoute>
+              <PrivateLayout />
+            </RegularUserRoute>
           </PrivateRoute>
         }>
           <Route path="/dashboard" element={<DashboardPage />} />
@@ -106,10 +124,14 @@ const App = () => {
           <Route path="/sales/invoices/:id" element={<InvoiceDetailsPage />} />
           <Route path="/purchases/suppliers" element={<SuppliersPage />} />
           <Route path="/purchases/suppliers/new" element={<NewVendorPage />} />
+          <Route path="/purchases/orders" element={<PurchaseOrdersPage />} />
+          <Route path="/purchases/orders/new" element={<NewPurchaseOrderPage />} />
           <Route path="/purchases/receives" element={<PurchaseReceivesPage />} />
           <Route path="/purchases/receives/new" element={<NewPurchaseReceivePage />} />
           <Route path="/purchases/bills" element={<BillsPage />} />
           <Route path="/purchases/bills/new" element={<NewBillPage />} />
+          <Route path="/purchases/bills/:id" element={<ViewBillPage />} />
+          <Route path="/purchases/bills/:id/edit" element={<EditBillPage />} />
           <Route path="/purchases/payments" element={<PaymentsPage />} />
           <Route path="/purchases/payments/new" element={<NewPaymentPage />} />
           <Route path="/purchases/vendor-credits" element={<VendorCreditsPage />} />

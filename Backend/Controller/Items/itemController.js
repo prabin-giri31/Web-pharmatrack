@@ -4,7 +4,7 @@ import Item from "../../Model/Items/Items.js";
 // Add new item
 export const addItem = async (req, res) => {
   try {
-    const { name, sku, unit, category, returnable, sellingPrice, costPrice, description } = req.body;
+    const { name, sku, unit, category, returnable, sellingPrice, costPrice, stockOnHand, reorderLevel, description, expiryDate } = req.body;
 
     // Basic validation
     if (!name || !unit || !sellingPrice || !costPrice) {
@@ -20,7 +20,10 @@ export const addItem = async (req, res) => {
       returnable,
       sellingPrice,
       costPrice,
+      stockOnHand: stockOnHand || 0,
+      reorderLevel: reorderLevel || 0,
       description,
+      expiryDate: expiryDate || null,
     });
 
     res.status(201).json(newItem);
